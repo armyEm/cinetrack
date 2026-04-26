@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>CineTrack — Entertainment Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #18181f;
+    --bg4: #22222c;
+    --card: #1a1a24;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0f0f5;
+    --text2: #a0a0b8;
+    --text3: #606075;
+    --accent: #e8b86d;
+    --accent2: #c9943a;
+    --purple: #8b6fd4;
+    --blue: #5b9bd5;
+    --green: #5db85d;
+    --coral: #d45b5b;
+    --pink: #d45ba8;
+    --teal: #5bd4b8;
+    --amber: #d4a85b;
+    --sw-gold: #ffe81f;
+    --k-pink: #ff6b9d;
+    --j-blue: #6bb5ff;
+    --c-red: #ff7676;
+    --anime-purple: #b06bff;
+    --cartoon-green: #6bff8a;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --nav-h: 64px;
+    --top-h: 56px;
+  }
+  .light {
+    --bg: #f4f4f8;
+    --bg2: #ffffff;
+    --bg3: #ebebf0;
+    --bg4: #e0e0e8;
+    --card: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #1a1a28;
+    --text2: #5a5a78;
+    --text3: #9090a8;
+    --accent: #b8820a;
+    --accent2: #8a5c00;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 14px;
+  }
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed; top:0; left:0; right:0; z-index:100;
+    height: var(--top-h);
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+  }
+  .light #topbar { background: rgba(244,244,248,0.92); }
+  #topbar .logo { font-family:'Cinzel',serif; font-size:18px; color:var(--accent); letter-spacing:1px; }
+  #topbar .top-actions { display:flex; gap:8px; }
+  .icon-btn {
+    width:36px; height:36px; border-radius:50%;
+    background:var(--bg3); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:16px; color:var(--text2);
+    transition: all 0.2s;
+  }
+  .icon-btn:hover { background:var(--bg4); color:var(--text); }
+  /* ── MAIN CONTENT ── */
+  #main {
+    padding-top: var(--top-h);
+    padding-bottom: calc(var(--nav-h) + 16px);
+    min-height: 100vh;
+  }
+  .page { display:none; padding:16px; animation: fadeIn 0.3s ease; }
+  .page.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  /* ── BOTTOM NAV ── */
+  #bottomnav {
+    position:fixed; bottom:0; left:0; right:0; z-index:100;
+    height: var(--nav-h);
+    background: rgba(10,10,15,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display:flex; align-items:center;
+    overflow-x: auto; overflow-y:hidden;
+    scrollbar-width:none;
+  }
+  #bottomnav::-webkit-scrollbar { display:none; }
+  .light #bottomnav { background: rgba(244,244,248,0.95); }
+  .nav-item {
+    flex: 0 0 auto;
+    display:flex; flex-direction:column; align-items:center;
+    padding: 8px 12px;
+    cursor:pointer; gap:3px;
+    min-width: 60px;
+    transition: all 0.2s;
+    color: var(--text3);
+  }
+  .nav-item.active { color:var(--accent); }
+  .nav-item .nav-icon { font-size:20px; }
+  .nav-item .nav-label { font-size:9px; font-weight:500; letter-spacing:0.3px; white-space:nowrap; }
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow:hidden;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size:13px; font-weight:600;
+    color: var(--accent);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-bottom:12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  /* ── PILLS / TAGS ── */
+  .pill {
+    display:inline-flex; align-items:center;
+    padding:3px 10px; border-radius:20px;
+    font-size:11px; font-weight:500;
+    border: 1px solid transparent;
+  }
+  .pill-watching { background:rgba(91,155,213,0.15); color:var(--blue); border-color:rgba(91,155,213,0.3); }
+  .pill-completed { background:rgba(93,184,93,0.15); color:var(--green); border-color:rgba(93,184,93,0.3); }
+  .pill-dropped { background:rgba(212,91,91,0.15); color:var(--coral); border-color:rgba(212,91,91,0.3); }
+  .pill-want { background:rgba(139,111,212,0.15); color:var(--purple); border-color:rgba(139,111,212,0.3); }
+  .pill-movie { background:rgba(212,168,91,0.15); color:var(--amber); border-color:rgba(212,168,91,0.3); }
+  .pill-series { background:rgba(91,212,184,0.15); color:var(--teal); border-color:rgba(91,212,184,0.3); }
+  /* ── BUTTONS ── */
+  .btn {
+    padding:10px 18px; border-radius:var(--radius-sm);
+    border:none; cursor:pointer; font-family:'Inter',sans-serif;
+    font-size:13px; font-weight:500; transition:all 0.2s;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-primary { background:var(--accent); color:#1a0e00; }
+  .btn-primary:hover { background:var(--accent2); }
+  .btn-secondary { background:var(--bg3); color:var(--text); border:1px solid var(--border); }
+  .btn-secondary:hover { background:var(--bg4); }
+  .btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--bg3); color:var(--text); }
+  .btn-sm { padding:6px 12px; font-size:12px; }
+  .btn-danger { background:rgba(212,91,91,0.15); color:var(--coral); border:1px solid rgba(212,91,91,0.3); }
+  /* ── INPUTS ── */
+  .input, .select, .textarea {
+    width:100%; padding:10px 14px;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:var(--radius-sm); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:13px;
+    outline:none; transition:border 0.2s;
+  }
+  .input:focus, .select:focus, .textarea:focus { border-color:var(--accent); }
+  .select option { background:var(--bg2); }
+  .textarea { resize:vertical; min-height:80px; }
+  .form-group { margin-bottom:14px; }
+  .form-label { font-size:12px; color:var(--text2); font-weight:500; margin-bottom:6px; display:block; }
+  /* ── PROGRESS BAR ── */
+  .prog-wrap { background:var(--bg3); border-radius:20px; height:6px; overflow:hidden; }
+  .prog-bar { height:100%; border-radius:20px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width 0.5s ease; }
+  .prog-bar.sw { background:linear-gradient(90deg,#ffe81f,#ffa800); }
+  .prog-bar.k { background:linear-gradient(90deg,#ff6b9d,#ff4488); }
+  .prog-bar.j { background:linear-gradient(90deg,#6bb5ff,#4488ff); }
+  .prog-bar.c { background:linear-gradient(90deg,#ff7676,#ff4444); }
+  .prog-bar.anime { background:linear-gradient(90deg,#b06bff,#8844ff); }
+  .prog-bar.cartoon { background:linear-gradient(90deg,#6bff8a,#44cc66); }
+  /* ── MEDIA CARD ── */
+  .media-card {
+    background:var(--card); border-radius:var(--radius);
+    border:1px solid var(--border);
+    display:flex; gap:12px; padding:12px;
+    margin-bottom:10px; transition:all 0.2s; cursor:pointer;
+    position:relative;
+  }
+  .media-card:hover { border-color:var(--border2); background:var(--bg3); }
+  .poster {
+    width:56px; height:80px; border-radius:var(--radius-sm);
+    background:var(--bg4); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; overflow:hidden; object-fit:cover;
+  }
+  .poster img { width:100%; height:100%; object-fit:cover; }
+  .media-info { flex:1; min-width:0; }
+  .media-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .media-meta { font-size:11px; color:var(--text3); margin-bottom:6px; }
+  .media-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  /* ── CHECKLIST ── */
+  .check-item {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:9px 0; border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .check-item:last-child { border-bottom:none; }
+  .check-box {
+    width:18px; height:18px; border-radius:4px;
+    border:2px solid var(--border2); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.2s; margin-top:1px;
+    background:transparent;
+  }
+  .check-item.done .check-box { background:var(--accent); border-color:var(--accent); }
+  .check-item.done .check-label { color:var(--text3); text-decoration:line-through; }
+  .check-label { font-size:13px; color:var(--text); flex:1; line-height:1.4; }
+  .check-sublabel { font-size:11px; color:var(--text3); display:block; }
+  /* ── STAR WARS ── */
+  .sw-header {
+    background: linear-gradient(180deg,rgba(255,232,31,0.08) 0%,transparent 100%);
+    border-bottom: 1px solid rgba(255,232,31,0.12);
+    padding:20px 16px;
+    text-align:center;
+  }
+  .sw-title { font-family:'Cinzel',serif; color:var(--sw-gold); font-size:22px; letter-spacing:3px; }
+  .sw-subtitle { font-size:12px; color:rgba(255,232,31,0.5); margin-top:4px; }
+  .sw-section {
+    background:var(--card); border-radius:var(--radius);
+    border:1px solid rgba(255,232,31,0.1);
+    margin-bottom:14px; overflow:hidden;
+  }
+  .sw-section-header {
+    padding:12px 14px; background:rgba(255,232,31,0.04);
+    border-bottom:1px solid rgba(255,232,31,0.08);
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer;
+  }
+  .sw-section-title { font-family:'Cinzel',serif; font-size:13px; color:var(--sw-gold); }
+  .sw-section-body { padding:0 14px; }
+  .sw-check { border-color: rgba(255,232,31,0.2); }
+  .sw-check-done { background:var(--sw-gold); border-color:var(--sw-gold); }
+  /* ── FRANCHISE SECTIONS ── */
+  .franchise-card {
+    background:var(--card); border-radius:var(--radius);
+    border:1px solid var(--border);
+    margin-bottom:16px; overflow:hidden;
+  }
+  .franchise-header {
+    padding:14px 16px;
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer;
+    transition:background 0.2s;
+  }
+  .franchise-header:hover { background:var(--bg3); }
+  .franchise-title-row { display:flex; align-items:center; gap:10px; }
+  .franchise-emoji { font-size:20px; }
+  .franchise-name { font-family:'Cinzel',serif; font-size:14px; font-weight:600; color:var(--text); }
+  .franchise-prog { font-size:11px; color:var(--text2); margin-top:2px; }
+  .franchise-body { padding:0 16px; overflow:hidden; max-height:0; transition:max-height 0.4s ease; }
+  .franchise-body.open { max-height:2000px; padding-bottom:12px; }
+  /* ── ASIAN HUB ── */
+  .hub-tabs {
+    display:flex; gap:6px; overflow-x:auto; padding-bottom:8px;
+    scrollbar-width:none; margin-bottom:16px;
+  }
+  .hub-tabs::-webkit-scrollbar { display:none; }
+  .hub-tab {
+    flex:0 0 auto; padding:7px 14px; border-radius:20px;
+    font-size:12px; font-weight:500; cursor:pointer;
+    border:1px solid var(--border); background:var(--bg3);
+    color:var(--text2); transition:all 0.2s; white-space:nowrap;
+  }
+  .hub-tab.active { color:#fff; border-color:transparent; }
+  .hub-tab[data-cat="all"].active { background:var(--accent); }
+  .hub-tab[data-cat="kdrama"].active { background:var(--k-pink); }
+  .hub-tab[data-cat="cdrama"].active { background:var(--c-red); }
+  .hub-tab[data-cat="jdrama"].active { background:var(--j-blue); }
+  .hub-tab[data-cat="anime"].active { background:var(--anime-purple); }
+  .hub-tab[data-cat="cartoon"].active { background:var(--cartoon-green); color:#0a2e12; }
+  /* ── MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; z-index:500;
+    background:rgba(0,0,0,0.8); backdrop-filter:blur(6px);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity 0.25s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--bg2); border-radius:var(--radius) var(--radius) 0 0;
+    border-top:1px solid var(--border);
+    width:100%; max-width:600px;
+    max-height:90vh; overflow-y:auto;
+    transform:translateY(30px); transition:transform 0.3s ease;
+    padding:20px 16px 32px;
+  }
+  .modal-overlay.open .modal { transform:translateY(0); }
+  .modal-handle { width:36px; height:4px; background:var(--bg4); border-radius:2px; margin:0 auto 16px; }
+  .modal-title { font-family:'Cinzel',serif; font-size:16px; color:var(--accent); margin-bottom:18px; }
+  /* ── DETAIL MODAL ── */
+  .detail-poster {
+    width:100%; height:180px; border-radius:var(--radius);
+    background:var(--bg3); display:flex; align-items:center;
+    justify-content:center; font-size:48px; margin-bottom:16px;
+    overflow:hidden;
+  }
+  .detail-poster img { width:100%; height:100%; object-fit:cover; }
+  /* ── STATS ── */
+  .stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+  .stat-card {
+    background:var(--bg3); border-radius:var(--radius-sm);
+    padding:14px; text-align:center;
+  }
+  .stat-val { font-size:26px; font-weight:600; color:var(--accent); font-family:'Cinzel',serif; }
+  .stat-label { font-size:11px; color:var(--text3); margin-top:4px; }
+  /* ── QUOTES ── */
+  .quotes-section { margin-top:12px; }
+  .quote-item {
+    background:var(--bg3); border-radius:var(--radius-sm);
+    padding:10px 12px; margin-bottom:8px; position:relative;
+    border-left:3px solid var(--accent);
+  }
+  .quote-text { font-size:13px; color:var(--text); font-style:italic; line-height:1.5; }
+  .quote-author { font-size:11px; color:var(--text3); margin-top:4px; }
+  .quote-del { position:absolute; top:8px; right:8px; background:none; border:none; color:var(--text3); cursor:pointer; font-size:14px; }
+  .quote-del:hover { color:var(--coral); }
+  /* ── NOTES ── */
+  .notes-text { font-size:13px; color:var(--text2); line-height:1.6; white-space:pre-wrap; }
+  /* ── HOME ── */
+  .continue-strip { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none; }
+  .continue-strip::-webkit-scrollbar { display:none; }
+  .continue-card {
+    flex:0 0 120px; background:var(--card); border-radius:var(--radius);
+    border:1px solid var(--border); overflow:hidden; cursor:pointer;
+    transition:transform 0.2s;
+  }
+  .continue-card:hover { transform:scale(1.03); }
+  .continue-thumb { height:75px; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .continue-info { padding:8px; }
+  .continue-name { font-size:11px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .continue-ep { font-size:10px; color:var(--text3); }
+  /* ── GRID ── */
+  .media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; }
+  .grid-card { background:var(--card); border-radius:var(--radius-sm); border:1px solid var(--border); overflow:hidden; cursor:pointer; transition:all 0.2s; }
+  .grid-card:hover { transform:scale(1.04); border-color:var(--border2); }
+  .grid-poster { height:130px; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:28px; }
+  .grid-poster img { width:100%; height:100%; object-fit:cover; }
+  .grid-info { padding:7px; }
+  .grid-title { font-size:11px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .grid-meta { font-size:10px; color:var(--text3); }
+  /* ── CELEBRATION ── */
+  #celebration {
+    position:fixed; inset:0; z-index:999; pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity 0.3s;
+  }
+  #celebration.show { opacity:1; }
+  .celebration-text { font-family:'Cinzel',serif; font-size:24px; color:var(--accent); text-align:center; animation:celebPop 0.5s ease; }
+  @keyframes celebPop { from{transform:scale(0.5)} to{transform:scale(1)} }
+  /* ── MISC ── */
+  .flex-row { display:flex; align-items:center; gap:8px; }
+  .flex-between { display:flex; align-items:center; justify-content:space-between; }
+  .mt-8 { margin-top:8px; } .mt-12 { margin-top:12px; } .mt-16 { margin-top:16px; }
+  .mb-8 { margin-bottom:8px; } .mb-12 { margin-bottom:12px; }
+  .text-muted { color:var(--text3); }
+  .text-sm { font-size:12px; }
+  .empty-state { text-align:center; padding:40px 20px; color:var(--text3); }
+  .empty-icon { font-size:40px; margin-bottom:12px; }
+  .empty-title { font-size:15px; color:var(--text2); margin-bottom:6px; }
+  .divider { height:1px; background:var(--border); margin:12px 0; }
+  .badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:20px; font-size:10px; font-weight:600; background:var(--accent); color:#1a0e00; }
+  /* Scroll to top */
+  .scroll-anchor { scroll-margin-top: calc(var(--top-h) + 8px); }
+  /* Range input */
+  input[type=range] { -webkit-appearance:none; width:100%; height:4px; border-radius:2px; background:var(--bg4); outline:none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <span class="logo">✦ CineTrack</span>
+  <div class="top-actions">
+    <button class="icon-btn" onclick="openModal('addModal')" title="Add">➕</button>
+    <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌙</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- ══ HOME ══ -->
+  <div class="page active" id="page-home">
+    <div class="sw-header" style="margin:-16px -16px 16px;background:linear-gradient(180deg,rgba(232,184,109,0.08),transparent);">
+      <div style="font-family:'Cinzel',serif;font-size:20px;color:var(--accent);letter-spacing:2px;">CineTrack</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">Your entertainment companion</div>
+    </div>
+
+    <div class="section-title">▶ Continue Watching</div>
+    <div class="continue-strip" id="continueStrip">
+      <div class="empty-state" style="padding:20px;min-width:200px;">
+        <div style="font-size:24px;">🎬</div>
+        <div style="font-size:12px;margin-top:6px;">Nothing in progress yet</div>
+      </div>
+    </div>
+
+    <div class="mt-16 section-title">✦ Recently Added</div>
+    <div id="recentlyAdded"></div>
+
+    <div class="mt-16 section-title">💡 Suggested Next</div>
+    <div id="suggestedNext">
+      <div class="empty-state">
+        <div class="empty-icon">🎯</div>
+        <div class="empty-title">Add items to your Want to Watch list!</div>
+      </div>
+    </div>
+
+    <div class="mt-16" style="text-align:center;">
+      <button class="btn btn-primary" onclick="openModal('addModal')" style="width:100%;justify-content:center;">➕ Add New Title</button>
+    </div>
+  </div>
+
+  <!-- ══ LIBRARY ══ -->
+  <div class="page" id="page-library">
+    <div class="flex-between mb-12">
+      <div class="section-title" style="margin-bottom:0;">My Library</div>
+      <button class="btn btn-sm btn-ghost" onclick="openModal('catModal')">+ Category</button>
+    </div>
+    <div class="flex-row mb-12" style="flex-wrap:wrap;gap:6px;" id="categoryFilter">
+      <button class="hub-tab active" data-filter="all" onclick="filterLibrary('all')">All</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-sm btn-ghost" onclick="setLibView('list')" id="viewList">☰ List</button>
+      <button class="btn btn-sm btn-ghost" onclick="setLibView('grid')" id="viewGrid">⊞ Grid</button>
+    </div>
+    <div id="libraryContent"></div>
+  </div>
+
+  <!-- ══ WANT TO WATCH ══ -->
+  <div class="page" id="page-watchlist">
+    <div class="section-title">📌 Want to Watch</div>
+    <div id="watchlistContent"></div>
+  </div>
+
+  <!-- ══ STAR WARS ══ -->
+  <div class="page" id="page-starwars">
+    <div class="sw-header" style="margin:-16px -16px 16px;">
+      <div class="sw-title">STAR WARS</div>
+      <div class="sw-subtitle">Complete Chronological Watch Order</div>
+      <div class="mt-12">
+        <div class="flex-between mb-8" style="font-size:12px;color:rgba(255,232,31,0.6);">
+          <span>Timeline Progress</span>
+          <span id="swProgressText">0%</span>
+        </div>
+        <div class="prog-wrap"><div class="prog-bar sw" id="swProgressBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div id="swContent"></div>
+  </div>
+
+  <!-- ══ ASIAN & ANIMATION HUB ══ -->
+  <div class="page" id="page-hub">
+    <div style="margin:-16px -16px 16px;padding:16px;background:linear-gradient(135deg,rgba(176,107,255,0.08),rgba(107,181,255,0.05));">
+      <div style="font-family:'Cinzel',serif;font-size:18px;letter-spacing:1px;margin-bottom:2px;">🎌 Asian & Animation Hub</div>
+      <div style="font-size:12px;color:var(--text3);">Dramas · Anime · Cartoons</div>
+    </div>
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-cat="all" onclick="filterHub('all')">All</button>
+      <button class="hub-tab" data-cat="kdrama" onclick="filterHub('kdrama')">🇰🇷 K-Drama</button>
+      <button class="hub-tab" data-cat="cdrama" onclick="filterHub('cdrama')">🇨🇳 C-Drama</button>
+      <button class="hub-tab" data-cat="jdrama" onclick="filterHub('jdrama')">🇯🇵 J-Drama</button>
+      <button class="hub-tab" data-cat="anime" onclick="filterHub('anime')">🎌 Anime</button>
+      <button class="hub-tab" data-cat="cartoon" onclick="filterHub('cartoon')">🎨 Cartoons</button>
+    </div>
+    <div id="hubStats" class="stat-grid" style="margin-bottom:16px;"></div>
+    <div id="hubContent"></div>
+  </div>
+
+  <!-- ══ PROGRESS ══ -->
+  <div class="page" id="page-progress">
+    <div class="section-title">📊 Progress Dashboard</div>
+    <div class="stat-grid" id="mainStats"></div>
+    <div class="section-title mt-16">Category Breakdown</div>
+    <div id="catBreakdown"></div>
+    <div class="section-title mt-16">Franchise Checklists</div>
+    <div id="franchiseChecklists"></div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="page" id="page-settings">
+    <div class="section-title">⚙️ Settings</div>
+    <div class="card" style="padding:16px;margin-bottom:12px;">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div>
+          <div style="font-weight:500;">Dark Mode</div>
+          <div style="font-size:12px;color:var(--text3);">Toggle appearance</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
+      </div>
+      <div class="divider"></div>
+      <div style="margin-bottom:14px;">
+        <div style="font-weight:500;margin-bottom:6px;">Custom Categories</div>
+        <div id="catList" style="font-size:13px;color:var(--text2);"></div>
+        <button class="btn btn-ghost btn-sm mt-8" onclick="openModal('catModal')">+ Add Category</button>
+      </div>
+      <div class="divider"></div>
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div>
+          <div style="font-weight:500;">Export Data</div>
+          <div style="font-size:12px;color:var(--text3);">Backup as JSON</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportData()">📤 Export</button>
+      </div>
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div>
+          <div style="font-weight:500;">Import Data</div>
+          <div style="font-size:12px;color:var(--text3);">Restore from JSON</div>
+        </div>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;">📥 Import<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label>
+      </div>
+      <div class="divider"></div>
+      <div class="flex-between">
+        <div>
+          <div style="font-weight:500;color:var(--coral);">Reset All Data</div>
+          <div style="font-size:12px;color:var(--text3);">Cannot be undone</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="resetData()">🗑️ Reset</button>
+      </div>
+    </div>
+    <!-- FILE-BASED SAVE -->
+    <div class="card" style="padding:16px;margin-bottom:12px;">
+      <div style="font-weight:500;margin-bottom:4px;">💾 File-Based Save</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Save your data as a file anywhere on your device — Downloads, SD card, Google Drive folder, USB, anywhere. Survives browser clears completely.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="saveToFile()" style="flex:1;">💾 Save File Now</button>
+        <label class="btn btn-secondary btn-sm" style="cursor:pointer;flex:1;justify-content:center;">📂 Load Save File<input type="file" accept=".cinetrack,.json" onchange="loadFromFile(event)" style="display:none;"></label>
+      </div>
+      <div id="fileSaveStatus" style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;"></div>
+    </div>
+
+    <!-- GOOGLE DRIVE SYNC -->
+    <div class="card" style="padding:16px;margin-bottom:12px;" id="driveCard">
+      <div style="font-weight:500;margin-bottom:4px;">☁️ Google Drive Sync</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Sign in with Google to save your data to Drive. Your file lives in your own Google Drive — accessible from any device, safe from browser clears.</div>
+      <div id="driveStatus">
+        <button class="btn btn-primary btn-sm" onclick="initGoogleDrive()" style="width:100%;justify-content:center;">
+          <span style="font-size:14px;">G</span> Sign in with Google
+        </button>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;">
+      <div style="font-weight:500;margin-bottom:8px;">About CineTrack</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.6;">Version 2.0 — Your personal entertainment companion. Track movies, shows, dramas, anime, and more.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottomnav">
+  <div class="nav-item active" onclick="navigate('home')" data-page="home">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Home</span>
+  </div>
+  <div class="nav-item" onclick="navigate('library')" data-page="library">
+    <span class="nav-icon">🎞️</span>
+    <span class="nav-label">Library</span>
+  </div>
+  <div class="nav-item" onclick="navigate('watchlist')" data-page="watchlist">
+    <span class="nav-icon">📌</span>
+    <span class="nav-label">Watchlist</span>
+  </div>
+  <div class="nav-item" onclick="navigate('starwars')" data-page="starwars">
+    <span class="nav-icon">⭐</span>
+    <span class="nav-label">Star Wars</span>
+  </div>
+  <div class="nav-item" onclick="navigate('hub')" data-page="hub">
+    <span class="nav-icon">🎌</span>
+    <span class="nav-label">Hub</span>
+  </div>
+  <div class="nav-item" onclick="navigate('progress')" data-page="progress">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Progress</span>
+  </div>
+  <div class="nav-item" onclick="navigate('settings')" data-page="settings">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">Settings</span>
+  </div>
+</nav>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✦ Add New Title</div>
+    <div class="form-group">
+      <label class="form-label">Title *</label>
+      <input class="input" id="addTitle" placeholder="Movie or show title...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="select" id="addType" onchange="toggleEpisodeField()">
+        <option value="movie">🎬 Movie</option>
+        <option value="series">📺 Series</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="select" id="addCategory">
+        <option value="general">General</option>
+        <option value="kdrama">🇰🇷 K-Drama</option>
+        <option value="cdrama">🇨🇳 C-Drama</option>
+        <option value="jdrama">🇯🇵 J-Drama</option>
+        <option value="anime">🎌 Anime</option>
+        <option value="cartoon">🎨 Cartoon/Animation</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="select" id="addStatus">
+        <option value="want">📌 Want to Watch</option>
+        <option value="watching">▶ Watching</option>
+        <option value="completed">✅ Completed</option>
+        <option value="dropped">❌ Dropped</option>
+      </select>
+    </div>
+    <div class="form-group" id="epField">
+      <label class="form-label">Total Episodes</label>
+      <input class="input" type="number" id="addEpisodes" placeholder="e.g. 16" min="1">
+    </div>
+    <div class="form-group" id="epWatched" style="display:none;">
+      <label class="form-label">Episodes Watched</label>
+      <input class="input" type="number" id="addEpWatched" placeholder="0" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Poster Emoji / URL</label>
+      <input class="input" id="addPoster" placeholder="🎬 or https://image-url...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="textarea" id="addNotes" placeholder="Your thoughts, where to watch, etc..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quotes & Sayings</label>
+      <textarea class="textarea" id="addQuotes" placeholder="Add a memorable quote...&#10;— Character Name"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addItem()">Add Title</button>
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-overlay" id="catModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📂 Add Category</div>
+    <div class="form-group">
+      <label class="form-label">Category Name</label>
+      <input class="input" id="catName" placeholder="e.g. Sci-Fi Favourites">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji Icon</label>
+      <input class="input" id="catEmoji" placeholder="🎬" maxlength="4">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('catModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addCategory()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- CELEBRATION -->
+<div id="celebration">
+  <div class="celebration-text" id="celebText"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DATA STORE
+// ════════════════════════════════════════
+const DB_KEY = 'cinetrack_v2';
+function load() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY)) || defaultDB(); }
+  catch(e) { return defaultDB(); }
+}
+function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+function defaultDB() {
+  return {
+    items: [],
+    categories: ['general'],
+    swProgress: {},
+    franchiseProgress: {},
+    theme: 'dark',
+    libView: 'list',
+    nextId: 1
+  };
+}
+
+let db = load();
+
+// ════════════════════════════════════════
+// STAR WARS DATA
+// ════════════════════════════════════════
+const SW_TIMELINE = [
+  { id:'acolyte', title:'The Acolyte', type:'series', items:[
+    'Episode 1: Lost / Found','Episode 2: Revenge / Justice','Episode 3: Destiny',
+    'Episode 4: Day','Episode 5: Night','Episode 6: Teach / Corrupt',
+    'Episode 7: Choice','Episode 8: The Acolyte'
+  ]},
+  { id:'tpm', title:'The Phantom Menace', type:'film', items:['Watch film'] },
+  { id:'aotc', title:'Attack of the Clones', type:'film', items:['Watch film'] },
+  { id:'tcwmovie', title:'The Clone Wars (Movie)', type:'film', items:['Watch film'] },
+  { id:'tcw', title:'The Clone Wars', type:'series', items:[
+    'Season 1','Season 2','Season 3','Season 4','Season 5','Season 6','Season 7, Episodes 1–8'
+  ]},
+  { id:'totj', title:'Tales of the Jedi', type:'series', items:[
+    'Episode 1: Life and Death','Episode 2: Justice','Episode 3: Choices',
+    'Episode 4: The Sith Lord','Episode 5: Practice Makes Perfect','Episode 6: Resolve'
+  ]},
+  { id:'rots1', title:'Revenge of the Sith', type:'film', items:['Begin film — Pause before Order 66'] },
+  { id:'tcwfin', title:'The Clone Wars — Season 7 Finale', type:'series', items:[
+    'Episode 9: Old Friends Not Forgotten','Episode 10: The Phantom Apprentice',
+    'Episode 11: Shattered','Episode 12: Victory and Death'
+  ]},
+  { id:'rots2', title:'Revenge of the Sith', type:'film', items:['Finish film'] },
+  { id:'tote', title:'Tales of the Empire', type:'series', items:[
+    'Episode 1: The Path of Fear','Episode 2: The Path of Anger','Episode 3: The Path of Hate',
+    'Episode 4: Devoted','Episode 5: Realization','Episode 6: The Way Out'
+  ]},
+  { id:'tbb', title:'The Bad Batch', type:'series', items:['Season 1','Season 2','Season 3'] },
+  { id:'totu', title:'Tales of the Underworld', type:'series', items:['Season 1'] },
+  { id:'solo', title:'Solo: A Star Wars Story', type:'film', items:['Watch film'] },
+  { id:'obk', title:'Obi-Wan Kenobi', type:'series', items:['Part I','Part II','Part III','Part IV','Part V','Part VI'] },
+  { id:'andor', title:'Andor', type:'series', items:['Season 1','Season 2'] },
+  { id:'rebels', title:'Star Wars Rebels', type:'series', items:['Season 1','Season 2','Season 3','Season 4'] },
+  { id:'rogue1', title:'Rogue One', type:'film', items:['Watch film'] },
+  { id:'ot', title:'Original Trilogy', type:'series', items:[
+    'Episode IV: A New Hope','Episode V: The Empire Strikes Back','Episode VI: Return of the Jedi'
+  ]},
+  { id:'mando', title:'The Mandalorian', type:'series', items:['Season 1','Season 2','Season 3'] },
+  { id:'bobf', title:'The Book of Boba Fett', type:'series', items:['Season 1'] },
+  { id:'ahsoka', title:'Ahsoka', type:'series', items:['Season 1'] },
+  { id:'skeleton', title:'Skeleton Crew', type:'series', items:['Season 1'] },
+  { id:'resistance', title:'Star Wars Resistance + Sequel Trilogy', type:'series', items:[
+    'Resistance Season 1','Episode VII: The Force Awakens','Episode VIII: The Last Jedi',
+    'Resistance Season 2','Episode IX: The Rise of Skywalker'
+  ]},
+];
+
+// ════════════════════════════════════════
+// FRANCHISE CHECKLISTS DATA
+// ════════════════════════════════════════
+const FRANCHISES = [
+  { id:'hp', emoji:'⚡', name:'Harry Potter & Wizarding World', items:[
+    'Harry Potter and the Sorcerer\'s Stone','Harry Potter and the Chamber of Secrets',
+    'Harry Potter and the Prisoner of Azkaban','Harry Potter and the Goblet of Fire',
+    'Harry Potter and the Order of the Phoenix','Harry Potter and the Half-Blood Prince',
+    'Harry Potter and the Deathly Hallows – Part 1','Harry Potter and the Deathly Hallows – Part 2',
+    'Fantastic Beasts and Where to Find Them','Fantastic Beasts: The Crimes of Grindelwald',
+    'Fantastic Beasts: The Secrets of Dumbledore'
+  ]},
+  { id:'lotr', emoji:'💍', name:'Middle-earth', items:[
+    'The Rings of Power – Season 1','The Rings of Power – Season 2',
+    'The Hobbit: An Unexpected Journey','The Hobbit: The Desolation of Smaug',
+    'The Hobbit: The Battle of the Five Armies',
+    'The Fellowship of the Ring','The Two Towers','The Return of the King',
+    'The War of the Rohirrim'
+  ]},
+  { id:'mcu', emoji:'🦸', name:'Marvel Cinematic Universe', items:[
+    'Iron Man','Captain America: The First Avenger','Captain Marvel','Iron Man 2','Thor',
+    'The Avengers','Captain America: The Winter Soldier','Guardians of the Galaxy',
+    'Guardians of the Galaxy Vol. 2','Avengers: Age of Ultron','Captain America: Civil War',
+    'Black Panther','Spider-Man: Homecoming','Doctor Strange','Thor: Ragnarok',
+    'Avengers: Infinity War','Avengers: Endgame','WandaVision','Loki – Season 1',
+    'Spider-Man: No Way Home'
+  ]},
+  { id:'dc', emoji:'🦇', name:'DC Essential Universe', items:[
+    'Wonder Woman','Man of Steel','Batman v Superman: Dawn of Justice',
+    'Zack Snyder\'s Justice League','Aquaman','The Batman','The Penguin'
+  ]},
+  { id:'jurassic', emoji:'🦖', name:'Jurassic Franchise', items:[
+    'Jurassic Park','The Lost World: Jurassic Park','Jurassic Park III',
+    'Jurassic World','Jurassic World: Fallen Kingdom','Jurassic World Dominion',
+    'Jurassic World: Camp Cretaceous','Jurassic World: Chaos Theory'
+  ]},
+  { id:'narnia', emoji:'🧝', name:'The Chronicles of Narnia', items:[
+    'The Lion, the Witch and the Wardrobe','Prince Caspian','The Voyage of the Dawn Treader'
+  ]},
+  { id:'pirates', emoji:'🏴‍☠️', name:'Pirates of the Caribbean', items:[
+    'The Curse of the Black Pearl','Dead Man\'s Chest','At World\'s End',
+    'On Stranger Tides','Dead Men Tell No Tales'
+  ]},
+  { id:'transformers', emoji:'🤖', name:'Transformers', items:[
+    'Bumblebee','Transformers: Rise of the Beasts','Transformers',
+    'Revenge of the Fallen','Dark of the Moon','Age of Extinction','The Last Knight'
+  ]},
+  { id:'sherlock', emoji:'🕵️', name:'Sherlock Holmes Collection', items:[
+    'Sherlock (BBC) – Season 1','Season 2','Season 3','The Abominable Bride','Season 4'
+  ]},
+  { id:'httyd', emoji:'🐉', name:'How to Train Your Dragon', items:[
+    'How to Train Your Dragon','Dragons: Riders of Berk','Dragons: Defenders of Berk',
+    'Dragons: Race to the Edge','How to Train Your Dragon 2',
+    'How to Train Your Dragon: The Hidden World'
+  ]},
+];
+
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+let currentPage = 'home';
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  currentPage = page;
+  window.scrollTo(0,0);
+  renderPage(page);
+}
+
+function renderPage(page) {
+  if(page==='home') renderHome();
+  else if(page==='library') renderLibrary();
+  else if(page==='watchlist') renderWatchlist();
+  else if(page==='starwars') renderStarWars();
+  else if(page==='hub') renderHub();
+  else if(page==='progress') renderProgress();
+  else if(page==='settings') renderSettings();
+}
+
+// ════════════════════════════════════════
+// THEME
+// ════════════════════════════════════════
+function toggleTheme() {
+  db.theme = db.theme==='dark'?'light':'dark';
+  applyTheme(); save();
+}
+function applyTheme() {
+  document.body.classList.toggle('light', db.theme==='light');
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = db.theme==='dark'?'🌙 Dark':'☀️ Light';
+}
+
+// ════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+
+function toggleEpisodeField() {
+  const type = document.getElementById('addType').value;
+  document.getElementById('epField').style.display = type==='series'?'block':'none';
+  document.getElementById('epWatched').style.display = type==='series'?'block':'none';
+}
+
+// ════════════════════════════════════════
+// ADD ITEM
+// ════════════════════════════════════════
+function addItem(prefill) {
+  const title = (document.getElementById('addTitle').value||'').trim();
+  if(!title) { alert('Please enter a title'); return; }
+  const type = document.getElementById('addType').value;
+  const category = document.getElementById('addCategory').value;
+  const status = document.getElementById('addStatus').value;
+  const totalEp = parseInt(document.getElementById('addEpisodes').value)||0;
+  const epWatched = parseInt(document.getElementById('addEpWatched').value)||0;
+  const poster = document.getElementById('addPoster').value.trim()||'🎬';
+  const notes = document.getElementById('addNotes').value.trim();
+  const quotesRaw = document.getElementById('addQuotes').value.trim();
+  const quotes = quotesRaw ? quotesRaw.split('\n').filter(q=>q.trim()) : [];
+
+  const item = {
+    id: db.nextId++,
+    title, type, category, status,
+    totalEp, epWatched,
+    poster, notes, quotes,
+    added: Date.now()
+  };
+  db.items.push(item);
+  save();
+  closeModal('addModal');
+  resetAddForm();
+  renderPage(currentPage);
+  celebrate(status==='completed'?'🎉 Added to Completed!':'✦ Added to Library!');
+}
+
+function resetAddForm() {
+  ['addTitle','addEpisodes','addEpWatched','addPoster','addNotes','addQuotes'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('addType').value='movie';
+  document.getElementById('addCategory').value='general';
+  document.getElementById('addStatus').value='want';
+  toggleEpisodeField();
+}
+
+// ════════════════════════════════════════
+// CATEGORY
+// ════════════════════════════════════════
+function addCategory() {
+  const name = document.getElementById('catName').value.trim();
+  if(!name) return;
+  const emoji = document.getElementById('catEmoji').value.trim()||'📂';
+  const key = name.toLowerCase().replace(/\s+/g,'_');
+  if(!db.categories.includes(key)) {
+    db.categories.push(key);
+    if(!db.catNames) db.catNames = {};
+    db.catNames[key] = emoji+' '+name;
+    // Add to add form select
+    const sel = document.getElementById('addCategory');
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = emoji+' '+name;
+    sel.appendChild(opt);
+  }
+  save(); closeModal('catModal');
+  document.getElementById('catName').value='';
+  document.getElementById('catEmoji').value='';
+  renderSettings();
+}
+
+function getCatName(cat) {
+  const map = {
+    general:'🎬 General', kdrama:'🇰🇷 K-Drama', cdrama:'🇨🇳 C-Drama',
+    jdrama:'🇯🇵 J-Drama', anime:'🎌 Anime', cartoon:'🎨 Cartoon'
+  };
+  if(map[cat]) return map[cat];
+  if(db.catNames && db.catNames[cat]) return db.catNames[cat];
+  return cat;
+}
+
+// ════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════
+function renderHome() {
+  const watching = db.items.filter(i=>i.status==='watching').slice(-5).reverse();
+  const strip = document.getElementById('continueStrip');
+  if(watching.length) {
+    strip.innerHTML = watching.map(i=>`
+      <div class="continue-card" onclick="openDetail(${i.id})">
+        <div class="continue-thumb">${posterHTML(i,true)}</div>
+        <div class="continue-info">
+          <div class="continue-name">${esc(i.title)}</div>
+          <div class="continue-ep">${i.type==='series'?`Ep ${i.epWatched||0}/${i.totalEp||'?'}`:'Movie'}</div>
+        </div>
+      </div>`).join('');
+  } else {
+    strip.innerHTML='<div class="empty-state" style="padding:20px;min-width:200px;"><div style="font-size:24px;">🎬</div><div style="font-size:12px;margin-top:6px;">Nothing in progress yet</div></div>';
+  }
+
+  const recent = db.items.slice(-3).reverse();
+  const recEl = document.getElementById('recentlyAdded');
+  recEl.innerHTML = recent.length ? recent.map(i=>mediaCardHTML(i)).join('') :
+    '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Nothing added yet</div></div>';
+
+  const want = db.items.filter(i=>i.status==='want').slice(0,3);
+  const sugEl = document.getElementById('suggestedNext');
+  sugEl.innerHTML = want.length ? want.map(i=>mediaCardHTML(i)).join('') :
+    '<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-title">Add items to your Watchlist!</div></div>';
+}
+
+// ════════════════════════════════════════
+// LIBRARY
+// ════════════════════════════════════════
+let libFilter = 'all';
+let libView = 'list';
+function setLibView(v) {
+  libView = v; db.libView = v; save(); renderLibrary();
+}
+function filterLibrary(cat) {
+  libFilter = cat;
+  document.querySelectorAll('#categoryFilter .hub-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`#categoryFilter .hub-tab[data-filter="${cat}"]`).classList.add('active');
+  renderLibrary();
+}
+
+function renderLibrary() {
+  const filterEl = document.getElementById('categoryFilter');
+  const allCats = ['all',...db.categories];
+  filterEl.innerHTML = allCats.map(c=>`
+    <button class="hub-tab ${libFilter===c?'active':''}" data-filter="${c}" onclick="filterLibrary('${c}')">${c==='all'?'All':getCatName(c)}</button>
+  `).join('');
+
+  let items = libFilter==='all' ? db.items : db.items.filter(i=>i.category===libFilter);
+  const el = document.getElementById('libraryContent');
+
+  if(!items.length) {
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Nothing here yet</div><div>Add titles using the ➕ button!</div></div>';
+    return;
+  }
+
+  // Group by status
+  const groups = {watching:'▶ Watching',completed:'✅ Completed',want:'📌 Want to Watch',dropped:'❌ Dropped'};
+  if(libView==='grid') {
+    let html = '';
+    for(const [status,label] of Object.entries(groups)) {
+      const g = items.filter(i=>i.status===status);
+      if(g.length) {
+        html += `<div class="section-title mt-16" style="margin-top:16px;">${label}</div>`;
+        html += `<div class="media-grid">${g.map(i=>gridCardHTML(i)).join('')}</div>`;
+      }
+    }
+    el.innerHTML = html;
+  } else {
+    let html = '';
+    for(const [status,label] of Object.entries(groups)) {
+      const g = items.filter(i=>i.status===status);
+      if(g.length) {
+        html += `<div class="section-title mt-16" style="margin-top:16px;">${label}</div>`;
+        html += g.map(i=>mediaCardHTML(i)).join('');
+      }
+    }
+    el.innerHTML = html;
+  }
+}
+
+// ════════════════════════════════════════
+// WATCHLIST
+// ════════════════════════════════════════
+function renderWatchlist() {
+  const want = db.items.filter(i=>i.status==='want');
+  const el = document.getElementById('watchlistContent');
+  if(!want.length) {
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">📌</div><div class="empty-title">Your watchlist is empty</div><div>Save titles you want to watch!</div></div>';
+    return;
+  }
+  el.innerHTML = want.map(i=>`
+    <div class="media-card" onclick="openDetail(${i.id})">
+      <div class="poster">${posterHTML(i)}</div>
+      <div class="media-info">
+        <div class="media-title">${esc(i.title)}</div>
+        <div class="media-meta">${getCatName(i.category)} · ${i.type==='movie'?'Movie':'Series'}</div>
+        <div class="media-actions">
+          <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();startWatching(${i.id})">▶ Start Watching</button>
+          <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();removeItem(${i.id})">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function startWatching(id) {
+  const item = db.items.find(i=>i.id===id);
+  if(item) { item.status='watching'; save(); renderPage(currentPage); celebrate('▶ Now Watching!'); }
+}
+
+// ════════════════════════════════════════
+// STAR WARS
+// ════════════════════════════════════════
+function renderStarWars() {
+  if(!db.swProgress) db.swProgress = {};
+  const total = SW_TIMELINE.reduce((s,sec)=>s+sec.items.length,0);
+  const done = SW_TIMELINE.reduce((s,sec)=>{
+    return s + sec.items.filter((_,i)=>db.swProgress[sec.id+'_'+i]).length;
+  },0);
+  const pct = total?Math.round(done/total*100):0;
+  document.getElementById('swProgressText').textContent = pct+'%';
+  document.getElementById('swProgressBar').style.width = pct+'%';
+
+  const el = document.getElementById('swContent');
+  el.innerHTML = SW_TIMELINE.map(sec=>{
+    const secDone = sec.items.filter((_,i)=>db.swProgress[sec.id+'_'+i]).length;
+    const secTotal = sec.items.length;
+    const secPct = secTotal?Math.round(secDone/secTotal*100):0;
+    const isOpen = db.swOpen && db.swOpen[sec.id];
+    return `
+      <div class="sw-section">
+        <div class="sw-section-header" onclick="toggleSwSection('${sec.id}')">
+          <div>
+            <div class="sw-section-title">${esc(sec.title)}</div>
+            <div style="font-size:11px;color:rgba(255,232,31,0.5);margin-top:2px;">${sec.type==='film'?'🎬 Film':'📺 Series'} · ${secDone}/${secTotal}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;font-weight:600;color:var(--sw-gold);">${secPct}%</div>
+            <div style="font-size:16px;margin-top:2px;color:rgba(255,232,31,0.5);">${isOpen?'▲':'▼'}</div>
+          </div>
+        </div>
+        <div class="sw-section-body" style="${isOpen?'':'display:none;'}">
+          ${sec.items.map((item,i)=>{
+            const key = sec.id+'_'+i;
+            const isDone = !!db.swProgress[key];
+            return `<div class="check-item ${isDone?'done':''}" onclick="toggleSw('${key}','${sec.id}')">
+              <div class="check-box ${isDone?'sw-check-done':'sw-check'}">
+                ${isDone?'<span style="color:#000;font-size:11px;font-weight:700;">✓</span>':''}
+              </div>
+              <div class="check-label">${esc(item)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleSwSection(id) {
+  if(!db.swOpen) db.swOpen = {};
+  db.swOpen[id] = !db.swOpen[id];
+  save(); renderStarWars();
+}
+
+function toggleSw(key, secId) {
+  if(!db.swProgress) db.swProgress = {};
+  db.swProgress[key] = !db.swProgress[key];
+  save(); renderStarWars();
+  // Check if section completed
+  const sec = SW_TIMELINE.find(s=>s.id===secId);
+  if(sec) {
+    const allDone = sec.items.every((_,i)=>db.swProgress[sec.id+'_'+i]);
+    if(allDone) celebrate('🌟 '+sec.title+' complete!');
+  }
+}
+
+// ════════════════════════════════════════
+// ASIAN & ANIMATION HUB
+// ════════════════════════════════════════
+let hubFilter = 'all';
+const HUB_CATS = ['kdrama','cdrama','jdrama','anime','cartoon'];
+
+function filterHub(cat) {
+  hubFilter = cat;
+  document.querySelectorAll('.hub-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.hub-tab[data-cat="${cat}"]`).classList.add('active');
+  renderHub();
+}
+
+function renderHub() {
+  const cats = hubFilter==='all' ? HUB_CATS : [hubFilter];
+  const hubItems = db.items.filter(i=>HUB_CATS.includes(i.category));
+
+  // Stats
+  const statsEl = document.getElementById('hubStats');
+  if(hubFilter==='all') {
+    statsEl.innerHTML = `
+      <div class="stat-card"><div class="stat-val" style="color:var(--k-pink);">${db.items.filter(i=>i.category==='kdrama'&&i.status==='completed').length}</div><div class="stat-label">K-Dramas Done</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--anime-purple);">${db.items.filter(i=>i.category==='anime'&&i.status==='completed').length}</div><div class="stat-label">Anime Done</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--j-blue);">${db.items.filter(i=>i.category==='jdrama'&&i.status==='completed').length}</div><div class="stat-label">J-Dramas Done</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--cartoon-green);">${db.items.filter(i=>i.category==='cartoon'&&i.status==='completed').length}</div><div class="stat-label">Cartoons Done</div></div>`;
+  } else {
+    const catItems = db.items.filter(i=>i.category===hubFilter);
+    const done = catItems.filter(i=>i.status==='completed').length;
+    const watching = catItems.filter(i=>i.status==='watching').length;
+    statsEl.innerHTML = `
+      <div class="stat-card"><div class="stat-val">${catItems.length}</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--blue);">${watching}</div><div class="stat-label">Watching</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--green);">${done}</div><div class="stat-label">Completed</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--purple);">${catItems.filter(i=>i.status==='want').length}</div><div class="stat-label">Watchlist</div></div>`;
+  }
+
+  const el = document.getElementById('hubContent');
+  const filtered = hubFilter==='all' ? hubItems : hubItems.filter(i=>i.category===hubFilter);
+
+  if(!filtered.length) {
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🎌</div><div class="empty-title">No ${hubFilter==='all'?'Asian & Animation':''}titles yet</div><div>Add K-Dramas, Anime, and more!</div></div>`;
+    return;
+  }
+
+  const catColor = {kdrama:'var(--k-pink)',cdrama:'var(--c-red)',jdrama:'var(--j-blue)',anime:'var(--anime-purple)',cartoon:'var(--cartoon-green)'};
+  const statuses = [{key:'watching',label:'▶ Currently Watching'},{key:'completed',label:'✅ Completed'},{key:'want',label:'📌 Want to Watch'}];
+
+  let html='';
+  for(const cat of cats) {
+    const catItemsAll = filtered.filter(i=>i.category===cat);
+    if(!catItemsAll.length && hubFilter!=='all') continue;
+    if(!catItemsAll.length) continue;
+    html += `<div style="margin-bottom:20px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><div style="width:4px;height:20px;background:${catColor[cat]||'var(--accent)'};border-radius:2px;"></div><div style="font-family:'Cinzel',serif;font-size:13px;font-weight:600;color:var(--text);">${getCatName(cat)}</div></div>`;
+    for(const {key,label} of statuses) {
+      const g = catItemsAll.filter(i=>i.status===key);
+      if(g.length) {
+        html += `<div style="font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;">${label}</div>`;
+        html += g.map(i=>hubCardHTML(i,cat)).join('');
+      }
+    }
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function hubCardHTML(item, cat) {
+  const catColor = {kdrama:'var(--k-pink)',cdrama:'var(--c-red)',jdrama:'var(--j-blue)',anime:'var(--anime-purple)',cartoon:'var(--cartoon-green)'};
+  const col = catColor[cat]||'var(--accent)';
+  const hasEp = item.type==='series' && item.totalEp;
+  const pct = hasEp ? Math.round((item.epWatched||0)/item.totalEp*100) : 0;
+  return `
+    <div class="media-card" onclick="openDetail(${item.id})" style="border-left:3px solid ${col};margin-bottom:10px;">
+      <div class="poster">${posterHTML(item)}</div>
+      <div class="media-info">
+        <div class="media-title">${esc(item.title)}</div>
+        ${hasEp?`
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Ep ${item.epWatched||0} / ${item.totalEp}</div>
+        <div class="prog-wrap" style="margin-bottom:6px;"><div class="prog-bar ${cat}" style="width:${pct}%"></div></div>`:''}
+        <div class="media-actions">
+          ${item.status==='watching'&&hasEp?`<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();nextEp(${item.id})" style="background:${col};color:#fff;">▶ Next Ep</button>`:''}
+          ${item.status==='want'?`<button class="btn btn-sm btn-primary" onclick="event.stopPropagation();startWatching(${item.id})">▶ Start</button>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function nextEp(id) {
+  const item = db.items.find(i=>i.id===id);
+  if(!item) return;
+  item.epWatched = (item.epWatched||0)+1;
+  if(item.totalEp && item.epWatched>=item.totalEp) {
+    item.status='completed';
+    save(); renderPage(currentPage);
+    celebrate('🎉 Completed '+item.title+'!');
+  } else {
+    save(); renderPage(currentPage);
+    if(item.totalEp && item.epWatched>=item.totalEp-2) celebrate('🔥 Almost there!');
+  }
+}
+
+// ════════════════════════════════════════
+// PROGRESS
+// ════════════════════════════════════════
+function renderProgress() {
+  const total = db.items.length;
+  const completed = db.items.filter(i=>i.status==='completed').length;
+  const movies = db.items.filter(i=>i.type==='movie'&&i.status==='completed').length;
+  const eps = db.items.reduce((s,i)=>s+(i.epWatched||0),0);
+  const hours = Math.round((movies*2 + eps*0.4));
+
+  document.getElementById('mainStats').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${total}</div><div class="stat-label">Total Titles</div></div>
+    <div class="stat-card"><div class="stat-val">${completed}</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card"><div class="stat-val">${eps}</div><div class="stat-label">Episodes Watched</div></div>
+    <div class="stat-card"><div class="stat-val">${hours}</div><div class="stat-label">Est. Hours</div></div>`;
+
+  const cats = [
+    {key:'anime',label:'Anime',col:'var(--anime-purple)'},
+    {key:'kdrama',label:'K-Drama',col:'var(--k-pink)'},
+    {key:'cdrama',label:'C-Drama',col:'var(--c-red)'},
+    {key:'jdrama',label:'J-Drama',col:'var(--j-blue)'},
+    {key:'cartoon',label:'Cartoons',col:'var(--cartoon-green)'},
+    {key:'general',label:'General',col:'var(--accent)'},
+  ];
+  const cbEl = document.getElementById('catBreakdown');
+  cbEl.innerHTML = cats.map(c=>{
+    const n = db.items.filter(i=>i.category===c.key).length;
+    const done = db.items.filter(i=>i.category===c.key&&i.status==='completed').length;
+    const pct = n ? Math.round(done/n*100) : 0;
+    return `<div style="margin-bottom:12px;">
+      <div class="flex-between mb-8" style="font-size:12px;"><span style="color:${c.col};font-weight:500;">${c.label}</span><span style="color:var(--text3);">${done}/${n} completed</span></div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%;background:${c.col};"></div></div>
+    </div>`;
+  }).join('');
+
+  // Franchise checklists progress
+  const fcEl = document.getElementById('franchiseChecklists');
+  fcEl.innerHTML = FRANCHISES.map(f=>{
+    if(!db.franchiseProgress) db.franchiseProgress={};
+    const done = f.items.filter((_,i)=>db.franchiseProgress[f.id+'_'+i]).length;
+    const pct = Math.round(done/f.items.length*100);
+    return `
+      <div class="franchise-card">
+        <div class="franchise-header" onclick="toggleFranchise('${f.id}')">
+          <div class="franchise-title-row">
+            <span class="franchise-emoji">${f.emoji}</span>
+            <div>
+              <div class="franchise-name">${esc(f.name)}</div>
+              <div class="franchise-prog">${done}/${f.items.length} · ${pct}%</div>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:14px;font-weight:600;color:var(--accent);">${pct}%</div>
+            <div style="font-size:14px;color:var(--text3);" id="ficon-${f.id}">▼</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 0;">
+          <div class="prog-wrap" style="margin-bottom:0;"><div class="prog-bar" style="width:${pct}%"></div></div>
+        </div>
+        <div class="franchise-body" id="fb-${f.id}">
+          ${f.items.map((item,i)=>{
+            const key = f.id+'_'+i;
+            const isDone = !!(db.franchiseProgress && db.franchiseProgress[key]);
+            return `<div class="check-item ${isDone?'done':''}" onclick="toggleFranchiseItem('${f.id}','${key}')">
+              <div class="check-box">${isDone?'<span style="color:#000;font-size:11px;font-weight:700;">✓</span>':''}</div>
+              <div class="check-label">${esc(item)}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleFranchise(id) {
+  const body = document.getElementById('fb-'+id);
+  const icon = document.getElementById('ficon-'+id);
+  if(body.classList.contains('open')) {
+    body.classList.remove('open');
+    if(icon) icon.textContent='▼';
+  } else {
+    body.classList.add('open');
+    if(icon) icon.textContent='▲';
+  }
+}
+
+function toggleFranchiseItem(fid, key) {
+  if(!db.franchiseProgress) db.franchiseProgress={};
+  db.franchiseProgress[key] = !db.franchiseProgress[key];
+  save();
+  const f = FRANCHISES.find(fr=>fr.id===fid);
+  if(f) {
+    const allDone = f.items.every((_,i)=>db.franchiseProgress[fid+'_'+i]);
+    if(allDone) celebrate('🎉 '+f.name+' complete!');
+  }
+  renderProgress();
+  // Re-open the section
+  setTimeout(()=>{ const b=document.getElementById('fb-'+fid); if(b)b.classList.add('open'); const ic=document.getElementById('ficon-'+fid); if(ic)ic.textContent='▲'; },50);
+}
+
+// ════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════
+function renderSettings() {
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = db.theme==='dark'?'🌙 Dark':'☀️ Light';
+  const el = document.getElementById('catList');
+  if(el) {
+    el.innerHTML = db.categories.map(c=>`
+      <div class="flex-between" style="padding:6px 0;border-bottom:1px solid var(--border);">
+        <span>${getCatName(c)}</span>
+        ${c!=='general'?`<button class="btn btn-sm btn-ghost" onclick="deleteCat('${c}')">✕</button>`:''}
+      </div>`).join('');
+  }
+}
+
+function deleteCat(cat) {
+  db.categories = db.categories.filter(c=>c!==cat);
+  save(); renderSettings();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cinetrack_backup.json';
+  a.click();
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      db = JSON.parse(ev.target.result);
+      save(); renderPage(currentPage);
+      celebrate('✦ Data imported!');
+    } catch { alert('Invalid file'); }
+  };
+  reader.readAsText(file);
+}
+
+function resetData() {
+  if(confirm('Reset ALL data? This cannot be undone.')) {
+    db = defaultDB(); save(); renderPage(currentPage);
+  }
+}
+
+// ════════════════════════════════════════
+// DETAIL VIEW
+// ════════════════════════════════════════
+function openDetail(id) {
+  const item = db.items.find(i=>i.id===id);
+  if(!item) return;
+  const hasEp = item.type==='series' && item.totalEp;
+  const pct = hasEp ? Math.round((item.epWatched||0)/item.totalEp*100) : 0;
+  const isPoster = item.poster && item.poster.startsWith('http');
+
+  const quotesHTML = (item.quotes||[]).map((q,qi)=>`
+    <div class="quote-item">
+      <div class="quote-text">"${esc(q)}"</div>
+      <button class="quote-del" onclick="deleteQuote(${id},${qi})">✕</button>
+    </div>`).join('');
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="modal-title">${esc(item.title)}</div>
+    <div class="detail-poster">
+      ${isPoster?`<img src="${esc(item.poster)}" alt="">`:`<span style="font-size:56px;">${item.poster||'🎬'}</span>`}
+    </div>
+    <div class="flex-row mb-12" style="flex-wrap:wrap;gap:6px;">
+      <span class="pill pill-${item.status}">${statusLabel(item.status)}</span>
+      <span class="pill pill-${item.type}">${item.type==='movie'?'🎬 Movie':'📺 Series'}</span>
+      <span style="font-size:12px;color:var(--text3);">${getCatName(item.category)}</span>
+    </div>
+    ${hasEp?`
+    <div style="margin-bottom:14px;">
+      <div class="flex-between mb-8" style="font-size:13px;">
+        <span>Progress</span>
+        <span style="font-weight:600;">${item.epWatched||0} / ${item.totalEp} ep (${pct}%)</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+      <div class="flex-row mt-8" style="gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="nextEpDetail(${id})">▶ Next Episode</button>
+        <div style="display:flex;align-items:center;gap:6px;flex:1;">
+          <input type="number" id="epInput_${id}" value="${item.epWatched||0}" min="0" max="${item.totalEp}" class="input" style="width:70px;padding:6px 10px;font-size:13px;" onchange="setEp(${id},this.value)">
+          <span style="font-size:12px;color:var(--text3);">/ ${item.totalEp}</span>
+        </div>
+      </div>
+    </div>`:''}
+    <div style="margin-bottom:14px;">
+      <div class="form-label">Status</div>
+      <select class="select" onchange="setStatus(${id},this.value)">
+        <option value="want" ${item.status==='want'?'selected':''}>📌 Want to Watch</option>
+        <option value="watching" ${item.status==='watching'?'selected':''}>▶ Watching</option>
+        <option value="completed" ${item.status==='completed'?'selected':''}>✅ Completed</option>
+        <option value="dropped" ${item.status==='dropped'?'selected':''}>❌ Dropped</option>
+      </select>
+    </div>
+    ${item.notes?`
+    <div style="margin-bottom:14px;">
+      <div class="form-label">Notes</div>
+      <div class="notes-text">${esc(item.notes)}</div>
+    </div>`:''}
+    <div style="margin-bottom:14px;">
+      <div class="form-label" style="margin-bottom:8px;">💬 Quotes & Sayings</div>
+      ${quotesHTML || '<div style="font-size:12px;color:var(--text3);">No quotes yet</div>'}
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <input class="input" id="newQuote_${id}" placeholder="Add a quote..." style="flex:1;">
+        <button class="btn btn-primary btn-sm" onclick="addQuote(${id})">Add</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;">
+      <button class="btn btn-danger btn-sm" onclick="removeItem(${id});closeModal('detailModal')">🗑️ Remove</button>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('detailModal')">Close</button>
+    </div>`;
+  openModal('detailModal');
+}
+
+function nextEpDetail(id) {
+  nextEp(id);
+  openDetail(id);
+}
+
+function setEp(id, val) {
+  const item = db.items.find(i=>i.id===id);
+  if(!item) return;
+  const n = parseInt(val)||0;
+  item.epWatched = Math.min(n, item.totalEp||999);
+  if(item.totalEp && item.epWatched>=item.totalEp) {
+    item.status='completed';
+    celebrate('🎉 Completed '+item.title+'!');
+  }
+  save(); renderPage(currentPage);
+}
+
+function setStatus(id, status) {
+  const item = db.items.find(i=>i.id===id);
+  if(item) { item.status=status; save(); renderPage(currentPage); }
+}
+
+function addQuote(id) {
+  const item = db.items.find(i=>i.id===id);
+  const input = document.getElementById('newQuote_'+id);
+  if(!item || !input || !input.value.trim()) return;
+  if(!item.quotes) item.quotes=[];
+  item.quotes.push(input.value.trim());
+  save(); openDetail(id);
+}
+
+function deleteQuote(id, qi) {
+  const item = db.items.find(i=>i.id===id);
+  if(!item || !item.quotes) return;
+  item.quotes.splice(qi,1);
+  save(); openDetail(id);
+}
+
+function removeItem(id) {
+  db.items = db.items.filter(i=>i.id!==id);
+  save(); renderPage(currentPage);
+}
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+function esc(str) {
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function statusLabel(s) {
+  return {want:'📌 Want',watching:'▶ Watching',completed:'✅ Completed',dropped:'❌ Dropped'}[s]||s;
+}
+
+function posterHTML(item, small) {
+  if(!item.poster) return '🎬';
+  if(item.poster.startsWith('http')) {
+    return `<img src="${esc(item.poster)}" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.textContent='🎬'">`;
+  }
+  return item.poster;
+}
+
+function mediaCardHTML(item) {
+  const hasEp = item.type==='series' && item.totalEp;
+  const pct = hasEp ? Math.round((item.epWatched||0)/item.totalEp*100) : 0;
+  return `
+    <div class="media-card" onclick="openDetail(${item.id})">
+      <div class="poster">${posterHTML(item)}</div>
+      <div class="media-info">
+        <div class="media-title">${esc(item.title)}</div>
+        <div class="media-meta">${getCatName(item.category)}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+          <span class="pill pill-${item.status}">${statusLabel(item.status)}</span>
+          <span class="pill pill-${item.type}">${item.type==='movie'?'Movie':'Series'}</span>
+        </div>
+        ${hasEp?`<div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px;">Ep ${item.epWatched||0}/${item.totalEp}</div>`:''}
+      </div>
+    </div>`;
+}
+
+function gridCardHTML(item) {
+  const isPoster = item.poster && item.poster.startsWith('http');
+  return `
+    <div class="grid-card" onclick="openDetail(${item.id})">
+      <div class="grid-poster">
+        ${isPoster?`<img src="${esc(item.poster)}" alt="" onerror="this.parentNode.textContent='${item.poster||'🎬'}'">`:item.poster||'🎬'}
+      </div>
+      <div class="grid-info">
+        <div class="grid-title">${esc(item.title)}</div>
+        <div class="grid-meta">${item.type==='movie'?'Movie':'Series'}</div>
+      </div>
+    </div>`;
+}
+
+function celebrate(msg) {
+  const el = document.getElementById('celebration');
+  const txt = document.getElementById('celebText');
+  txt.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════
+// FILE-BASED SAVE
+// ════════════════════════════════════════
+function saveToFile() {
+  const data = JSON.stringify(db, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `cinetrack_save_${date}.cinetrack`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  // Update status
+  db.lastFileSave = Date.now();
+  save();
+  const el = document.getElementById('fileSaveStatus');
+  if(el) el.textContent = '✅ Saved! File downloaded to your device.';
+  celebrate('💾 Save file downloaded!');
+}
+
+function loadFromFile(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed.items) throw new Error('Invalid save file');
+      db = parsed;
+      save();
+      renderPage(currentPage);
+      celebrate('✦ Save file loaded!');
+      const el = document.getElementById('fileSaveStatus');
+      if(el) el.textContent = '✅ Data loaded from file successfully!';
+    } catch(err) {
+      alert('❌ Could not load file. Make sure it\'s a valid CineTrack save file (.cinetrack or .json).');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ════════════════════════════════════════
+// GOOGLE DRIVE SYNC
+// ════════════════════════════════════════
+const DRIVE_CLIENT_ID = ''; // User must add their own
+const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILENAME = 'cinetrack_data.json';
+let driveToken = null;
+let driveFileId = db.driveFileId || null;
+let gapiReady = false;
+
+function initGoogleDrive() {
+  // Check if user has set up client ID
+  if(!db.driveClientId) {
+    openModal('driveSetupModal');
+    return;
+  }
+  loadGoogleAPI();
+}
+
+function loadGoogleAPI() {
+  if(gapiReady) { signInGoogle(); return; }
+  const script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.onload = () => { gapiReady = true; signInGoogle(); };
+  script.onerror = () => {
+    updateDriveStatus('error', '❌ Could not load Google API. Check your internet connection.');
+  };
+  document.head.appendChild(script);
+}
+
+function signInGoogle() {
+  if(!db.driveClientId) { openModal('driveSetupModal'); return; }
+  updateDriveStatus('loading', '⏳ Signing in...');
+  try {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: db.driveClientId,
+      scope: DRIVE_SCOPES,
+      callback: (resp) => {
+        if(resp.error) { updateDriveStatus('error','❌ Sign-in failed: '+resp.error); return; }
+        driveToken = resp.access_token;
+        db.driveConnected = true;
+        save();
+        updateDriveStatus('connected', '✅ Connected to Google Drive');
+        renderDriveConnected();
+      }
+    });
+    client.requestAccessToken();
+  } catch(err) {
+    updateDriveStatus('error','❌ Error: '+err.message);
+  }
+}
+
+function renderDriveConnected() {
+  const el = document.getElementById('driveStatus');
+  if(!el) return;
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;color:var(--green);font-weight:500;">✅ Connected to Google Drive</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="uploadToDrive()" style="flex:1;">☁️ Save to Drive</button>
+        <button class="btn btn-secondary btn-sm" onclick="downloadFromDrive()" style="flex:1;">📥 Load from Drive</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="signOutDrive()" style="flex:1;">Sign Out</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleAutoSync()" style="flex:1;" id="autoSyncBtn">
+          ${db.autoSync?'🔄 Auto-Sync: ON':'🔄 Auto-Sync: OFF'}
+        </button>
+      </div>
+      <div id="driveLastSync" style="font-size:11px;color:var(--text3);text-align:center;">
+        ${db.lastDriveSync ? 'Last synced: '+new Date(db.lastDriveSync).toLocaleString() : 'Not yet synced'}
+      </div>
+    </div>`;
+}
+
+function toggleAutoSync() {
+  db.autoSync = !db.autoSync;
+  save();
+  const btn = document.getElementById('autoSyncBtn');
+  if(btn) btn.textContent = db.autoSync?'🔄 Auto-Sync: ON':'🔄 Auto-Sync: OFF';
+}
+
+async function uploadToDrive() {
+  if(!driveToken) { signInGoogle(); return; }
+  updateDriveStatus('loading','⏳ Saving to Drive...');
+  try {
+    const content = JSON.stringify(db, null, 2);
+    const blob = new Blob([content], {type:'application/json'});
+
+    let url, method;
+    // Check if file exists
+    if(!driveFileId) {
+      // Search for existing file
+      const searchRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}' and trashed=false&spaces=drive`,
+        { headers: { Authorization: 'Bearer '+driveToken } }
+      );
+      const searchData = await searchRes.json();
+      if(searchData.files && searchData.files.length > 0) {
+        driveFileId = searchData.files[0].id;
+        db.driveFileId = driveFileId;
+      }
+    }
+
+    if(driveFileId) {
+      // Update existing file
+      url = `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`;
+      method = 'PATCH';
+    } else {
+      // Create new file with metadata
+      const meta = JSON.stringify({ name: DRIVE_FILENAME, mimeType: 'application/json' });
+      const form = new FormData();
+      form.append('metadata', new Blob([meta],{type:'application/json'}));
+      form.append('file', blob);
+      const createRes = await fetch(
+        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+        { method:'POST', headers:{Authorization:'Bearer '+driveToken}, body:form }
+      );
+      const createData = await createRes.json();
+      driveFileId = createData.id;
+      db.driveFileId = driveFileId;
+      db.lastDriveSync = Date.now();
+      save();
+      renderDriveConnected();
+      celebrate('☁️ Saved to Google Drive!');
+      return;
+    }
+
+    await fetch(url, {
+      method, headers:{Authorization:'Bearer '+driveToken,'Content-Type':'application/json'},
+      body: content
+    });
+    db.lastDriveSync = Date.now();
+    db.driveFileId = driveFileId;
+    save();
+    renderDriveConnected();
+    celebrate('☁️ Saved to Google Drive!');
+  } catch(err) {
+    updateDriveStatus('error','❌ Upload failed: '+err.message);
+    console.error(err);
+  }
+}
+
+async function downloadFromDrive() {
+  if(!driveToken) { signInGoogle(); return; }
+  updateDriveStatus('loading','⏳ Loading from Drive...');
+  try {
+    let fid = driveFileId;
+    if(!fid) {
+      const searchRes = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}' and trashed=false`,
+        { headers:{Authorization:'Bearer '+driveToken} }
+      );
+      const searchData = await searchRes.json();
+      if(!searchData.files || !searchData.files.length) {
+        updateDriveStatus('error','❌ No save file found on Drive. Save first!');
+        renderDriveConnected();
+        return;
+      }
+      fid = searchData.files[0].id;
+      driveFileId = fid;
+    }
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
+      { headers:{Authorization:'Bearer '+driveToken} }
+    );
+    const data = await res.json();
+    if(!data.items) throw new Error('Invalid data');
+    db = data;
+    db.driveFileId = fid;
+    db.driveConnected = true;
+    db.driveClientId = db.driveClientId;
+    save();
+    renderPage(currentPage);
+    renderDriveConnected();
+    celebrate('📥 Loaded from Google Drive!');
+  } catch(err) {
+    updateDriveStatus('error','❌ Load failed: '+err.message);
+    console.error(err);
+  }
+}
+
+function signOutDrive() {
+  driveToken = null;
+  db.driveConnected = false;
+  save();
+  const el = document.getElementById('driveStatus');
+  if(el) el.innerHTML = `<button class="btn btn-primary btn-sm" onclick="initGoogleDrive()" style="width:100%;justify-content:center;"><span style="font-size:14px;">G</span> Sign in with Google</button>`;
+}
+
+function updateDriveStatus(type, msg) {
+  // Show status in the card
+  const el = document.getElementById('driveStatus');
+  if(!el) return;
+  if(type==='loading') {
+    el.innerHTML = `<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px;">${msg}</div>`;
+  } else if(type==='error') {
+    el.innerHTML = `
+      <div style="font-size:12px;color:var(--coral);margin-bottom:8px;">${msg}</div>
+      <button class="btn btn-ghost btn-sm" onclick="initGoogleDrive()">Try Again</button>`;
+  }
+}
+
+// Auto-sync on data change
+const origSave = save;
+
+// Re-init drive state on load
+if(db.driveConnected && db.driveClientId) {
+  setTimeout(()=>{
+    const el = document.getElementById('driveStatus');
+    if(el) el.innerHTML = `
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Previously connected. Re-authenticate to sync.</div>
+      <button class="btn btn-primary btn-sm" onclick="initGoogleDrive()" style="width:100%;justify-content:center;"><span style="font-size:14px;">G</span> Reconnect to Drive</button>`;
+  }, 100);
+}
+
+// ════════════════════════════════════════
+// SETTINGS RENDER UPGRADE
+// ════════════════════════════════════════
+const _origRenderSettings = renderSettings;
+renderSettings = function() {
+  _origRenderSettings();
+  // Update file save status
+  const el = document.getElementById('fileSaveStatus');
+  if(el && db.lastFileSave) {
+    el.textContent = 'Last saved: '+new Date(db.lastFileSave).toLocaleString();
+  }
+  // Restore drive UI if connected
+  if(db.driveConnected && driveToken) renderDriveConnected();
+};
+applyTheme();
+toggleEpisodeField();
+renderHome();
+
+// PWA Service Worker
+if('serviceWorker' in navigator) {
+  const swCode = `
+    self.addEventListener('install', ()=>self.skipWaiting());
+    self.addEventListener('activate', ()=>clients.claim());
+    self.addEventListener('fetch', e=>{
+      if(e.request.method!=='GET')return;
+      e.respondWith(caches.open('ct-v1').then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(res=>{c.put(e.request,res.clone());return res;}))));
+    });
+  `;
+  const blob = new Blob([swCode],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+</script>
+</body>
+</html>
