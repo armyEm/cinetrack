@@ -9,10 +9,6 @@
 <title>CineTrack — Entertainment Companion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --bg: #0a0a0f;
@@ -722,12 +718,22 @@
 // ════════════════════════════════════════
 // DATA STORE
 // ════════════════════════════════════════
+let currentUser = null;
+let syncTimeout = null;
+let isSyncing = false;
 const DB_KEY = 'cinetrack_v2';
 function load() {
   try { return JSON.parse(localStorage.getItem(DB_KEY)) || defaultDB(); }
   catch(e) { return defaultDB(); }
 }
-function save() { localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function save() {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  // Queue cloud sync if Firebase is ready and user is signed in
+  if(typeof firebase !== 'undefined' && currentUser) {
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(saveToFirestore, 3000);
+  }
+}
 
 function defaultDB() {
   return {
@@ -1582,165 +1588,6 @@ function celebrate(msg) {
 }
 
 // ════════════════════════════════════════
-// FIREBASE SETUP
-// ════════════════════════════════════════
-const firebaseConfig = {
-  apiKey: "AIzaSyBvaVO6OYSisYIA5rlgtFwUKQQtXfkKfFI",
-  authDomain: "cinetrack-d7934.firebaseapp.com",
-  projectId: "cinetrack-d7934",
-  storageBucket: "cinetrack-d7934.firebasestorage.app",
-  messagingSenderId: "759056158385",
-  appId: "1:759056158385:web:ce948ee390f5a798719c90"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const firestore = firebase.firestore();
-
-let currentUser = null;
-let syncTimeout = null;
-let isSyncing = false;
-
-// Listen for auth state changes
-auth.onAuthStateChanged(async user => {
-  currentUser = user;
-  if(user) {
-    showSignedIn(user);
-    await loadFromFirestore();
-  } else {
-    showSignedOut();
-  }
-});
-
-// ════════════════════════════════════════
-// SIGN IN / OUT
-// ════════════════════════════════════════
-async function signInWithGoogle() {
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-    // onAuthStateChanged handles the rest
-  } catch(err) {
-    if(err.code !== 'auth/popup-closed-by-user') {
-      alert('Sign-in failed: ' + err.message);
-    }
-  }
-}
-
-async function signOutGoogle() {
-  if(!confirm('Sign out? Your data is safely saved to your Google account.')) return;
-  await auth.signOut();
-  currentUser = null;
-  showSignedOut();
-  celebrate('👋 Signed out');
-}
-
-function showSignedIn(user) {
-  const out = document.getElementById('authSignedOut');
-  const inn = document.getElementById('authSignedIn');
-  if(out) out.style.display = 'none';
-  if(inn) inn.style.display = 'block';
-  const avatar = document.getElementById('userAvatar');
-  const name = document.getElementById('userName');
-  const email = document.getElementById('userEmail');
-  if(avatar && user.photoURL) avatar.src = user.photoURL;
-  if(name) name.textContent = user.displayName || 'User';
-  if(email) email.textContent = user.email;
-  updateSyncStatus('✅ All changes saved to your Google account');
-}
-
-function showSignedOut() {
-  const out = document.getElementById('authSignedOut');
-  const inn = document.getElementById('authSignedIn');
-  if(out) out.style.display = 'block';
-  if(inn) inn.style.display = 'none';
-}
-
-function updateSyncStatus(msg) {
-  const el = document.getElementById('syncStatus');
-  if(el) el.textContent = msg;
-}
-
-// ════════════════════════════════════════
-// FIRESTORE SYNC
-// ════════════════════════════════════════
-async function saveToFirestore() {
-  if(!currentUser || isSyncing) return;
-  isSyncing = true;
-  try {
-    const docRef = firestore.collection('users').doc(currentUser.uid);
-    await docRef.set({
-      data: JSON.stringify(db),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    const now = new Date().toLocaleTimeString();
-    updateSyncStatus('✅ Saved at ' + now);
-  } catch(err) {
-    updateSyncStatus('⚠️ Sync failed — data safe locally');
-    console.error('Firestore save error:', err);
-  } finally {
-    isSyncing = false;
-  }
-}
-
-async function loadFromFirestore() {
-  if(!currentUser) return;
-  try {
-    updateSyncStatus('⏳ Loading your data...');
-    const docRef = firestore.collection('users').doc(currentUser.uid);
-    const doc = await docRef.get();
-    if(doc.exists && doc.data().data) {
-      const cloudData = JSON.parse(doc.data().data);
-      // Merge: use cloud data but keep local if cloud is empty
-      if(cloudData.items && cloudData.items.length > 0) {
-        db = cloudData;
-        save(); // also save to localStorage as backup
-        renderPage(currentPage);
-        celebrate('☁️ Data loaded from your account!');
-      } else if(db.items && db.items.length > 0) {
-        // Local has data, push it to cloud
-        await saveToFirestore();
-      }
-      updateSyncStatus('✅ Synced with your Google account');
-    } else {
-      // No cloud data yet — push local data up
-      if(db.items && db.items.length > 0) {
-        await saveToFirestore();
-        updateSyncStatus('✅ Local data saved to your account');
-      } else {
-        updateSyncStatus('✅ Connected — start adding titles!');
-      }
-    }
-  } catch(err) {
-    updateSyncStatus('⚠️ Could not load cloud data — using local');
-    console.error('Firestore load error:', err);
-  }
-}
-
-async function manualSync() {
-  if(!currentUser) { navigate('settings'); return; }
-  updateSyncStatus('⏳ Syncing...');
-  await saveToFirestore();
-  celebrate('🔄 Synced!');
-}
-
-// Auto-sync: debounced 2 seconds after any change
-function scheduleSyncToCloud() {
-  if(!currentUser) return;
-  clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(saveToFirestore, 2000);
-}
-
-// ════════════════════════════════════════
-// OVERRIDE SAVE TO ALSO SYNC TO CLOUD
-// ════════════════════════════════════════
-const _localSave = save;
-save = function() {
-  localStorage.setItem(DB_KEY, JSON.stringify(db));
-  scheduleSyncToCloud();
-};
-
-// ════════════════════════════════════════
 // FILE-BASED SAVE
 // ════════════════════════════════════════
 function saveToFile() {
@@ -1787,10 +1634,8 @@ function loadFromFile(e) {
 const _origRenderSettings = renderSettings;
 renderSettings = function() {
   _origRenderSettings();
-  // Restore auth UI state
   if(currentUser) showSignedIn(currentUser);
   else showSignedOut();
-  // File save status
   const el = document.getElementById('fileSaveStatus');
   if(el && db.lastFileSave) {
     el.textContent = 'Last saved: ' + new Date(db.lastFileSave).toLocaleString();
@@ -1817,6 +1662,136 @@ if('serviceWorker' in navigator) {
   const blob = new Blob([swCode],{type:'application/javascript'});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
 }
+</script>
+
+<!-- Firebase SDKs loaded last so they're ready before init -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// ════════════════════════════════════════
+// FIREBASE INIT — runs after SDKs load
+// ════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBvaVO6OYSisYIA5rlgtFwUKQQtXfkKfFI",
+  authDomain: "cinetrack-d7934.firebaseapp.com",
+  projectId: "cinetrack-d7934",
+  storageBucket: "cinetrack-d7934.firebasestorage.app",
+  messagingSenderId: "759056158385",
+  appId: "1:759056158385:web:ce948ee390f5a798719c90"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+
+// ── SIGN IN / OUT ──
+async function signInWithGoogle() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+  } catch(err) {
+    if(err.code !== 'auth/popup-closed-by-user') {
+      alert('Sign-in failed: ' + err.message);
+    }
+  }
+}
+
+async function signOutGoogle() {
+  if(!confirm('Sign out? Your data is safely saved to your Google account.')) return;
+  await auth.signOut();
+  currentUser = null;
+  showSignedOut();
+  celebrate('👋 Signed out');
+}
+
+function showSignedIn(user) {
+  const out = document.getElementById('authSignedOut');
+  const inn = document.getElementById('authSignedIn');
+  if(out) out.style.display = 'none';
+  if(inn) inn.style.display = 'block';
+  const avatar = document.getElementById('userAvatar');
+  const uname = document.getElementById('userName');
+  const email = document.getElementById('userEmail');
+  if(avatar && user.photoURL) avatar.src = user.photoURL;
+  if(uname) uname.textContent = user.displayName || 'User';
+  if(email) email.textContent = user.email;
+  updateSyncStatus('✅ All changes saved to your Google account');
+}
+
+function showSignedOut() {
+  const out = document.getElementById('authSignedOut');
+  const inn = document.getElementById('authSignedIn');
+  if(out) out.style.display = 'block';
+  if(inn) inn.style.display = 'none';
+}
+
+function updateSyncStatus(msg) {
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = msg;
+}
+
+// ── FIRESTORE ──
+async function saveToFirestore() {
+  if(!currentUser || isSyncing) return;
+  isSyncing = true;
+  try {
+    await firestore.collection('users').doc(currentUser.uid).set({
+      data: JSON.stringify(db),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    updateSyncStatus('✅ Saved at ' + new Date().toLocaleTimeString());
+  } catch(err) {
+    updateSyncStatus('⚠️ Sync failed — data safe locally');
+    console.error(err);
+  } finally {
+    isSyncing = false;
+  }
+}
+
+async function loadFromFirestore() {
+  if(!currentUser) return;
+  try {
+    updateSyncStatus('⏳ Loading your data...');
+    const doc = await firestore.collection('users').doc(currentUser.uid).get();
+    if(doc.exists && doc.data() && doc.data().data) {
+      const cloudData = JSON.parse(doc.data().data);
+      db = cloudData;
+      saveLocal();
+      renderPage(currentPage);
+      updateSyncStatus('✅ Data restored from your Google account');
+      celebrate('☁️ Your data is back!');
+    } else {
+      if(db.items && db.items.length > 0) {
+        await saveToFirestore();
+        updateSyncStatus('✅ Local data backed up to your account');
+      } else {
+        updateSyncStatus('✅ Signed in — start adding titles!');
+      }
+    }
+  } catch(err) {
+    updateSyncStatus('⚠️ Could not reach cloud — showing local data');
+    console.error(err);
+  }
+}
+
+async function manualSync() {
+  if(!currentUser) { navigate('settings'); return; }
+  updateSyncStatus('⏳ Syncing...');
+  await saveToFirestore();
+  celebrate('🔄 Synced!');
+}
+
+// ── AUTH STATE ──
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  if(user) {
+    showSignedIn(user);
+    await loadFromFirestore();
+  } else {
+    showSignedOut();
+  }
+});
 </script>
 </body>
 </html>
