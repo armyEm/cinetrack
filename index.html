@@ -9,6 +9,10 @@
 <title>CineTrack — Entertainment Companion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
   :root {
     --bg: #0a0a0f;
@@ -498,6 +502,37 @@
   <!-- ══ SETTINGS ══ -->
   <div class="page" id="page-settings">
     <div class="section-title">⚙️ Settings</div>
+
+    <!-- GOOGLE ACCOUNT CARD -->
+    <div class="card" style="padding:16px;margin-bottom:12px;" id="authCard">
+      <div id="authSignedOut">
+        <div style="text-align:center;padding:8px 0;">
+          <div style="font-size:32px;margin-bottom:8px;">☁️</div>
+          <div style="font-weight:600;font-size:15px;margin-bottom:6px;">Sign in with Google</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:16px;">Your progress saves to your Google account automatically. Access it from any device, even after clearing your browser.</div>
+          <button class="btn btn-primary" onclick="signInWithGoogle()" style="width:100%;justify-content:center;gap:10px;padding:12px;">
+            <span style="font-size:18px;font-family:sans-serif;font-weight:700;color:#4285F4;">G</span>
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+      <div id="authSignedIn" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <img id="userAvatar" src="" style="width:44px;height:44px;border-radius:50%;background:var(--bg3);" onerror="this.style.display='none'">
+          <div>
+            <div id="userName" style="font-weight:600;font-size:14px;"></div>
+            <div id="userEmail" style="font-size:12px;color:var(--text3);"></div>
+          </div>
+          <span style="margin-left:auto;" class="pill pill-completed">✅ Synced</span>
+        </div>
+        <div id="syncStatus" style="font-size:11px;color:var(--text3);margin-bottom:12px;text-align:center;"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="manualSync()" style="flex:1;justify-content:center;">🔄 Sync Now</button>
+          <button class="btn btn-ghost btn-sm" onclick="signOutGoogle()" style="flex:1;justify-content:center;">Sign Out</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card" style="padding:16px;margin-bottom:12px;">
       <div class="flex-between" style="margin-bottom:14px;">
         <div>
@@ -539,7 +574,7 @@
     <!-- FILE-BASED SAVE -->
     <div class="card" style="padding:16px;margin-bottom:12px;">
       <div style="font-weight:500;margin-bottom:4px;">💾 File-Based Save</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Save your data as a file anywhere on your device — Downloads, SD card, Google Drive folder, USB, anywhere. Survives browser clears completely.</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Save your data as a file anywhere on your device — Downloads, SD card, USB. Survives browser clears completely.</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" onclick="saveToFile()" style="flex:1;">💾 Save File Now</button>
         <label class="btn btn-secondary btn-sm" style="cursor:pointer;flex:1;justify-content:center;">📂 Load Save File<input type="file" accept=".cinetrack,.json" onchange="loadFromFile(event)" style="display:none;"></label>
@@ -547,20 +582,9 @@
       <div id="fileSaveStatus" style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;"></div>
     </div>
 
-    <!-- GOOGLE DRIVE SYNC -->
-    <div class="card" style="padding:16px;margin-bottom:12px;" id="driveCard">
-      <div style="font-weight:500;margin-bottom:4px;">☁️ Google Drive Sync</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.6;">Sign in with Google to save your data to Drive. Your file lives in your own Google Drive — accessible from any device, safe from browser clears.</div>
-      <div id="driveStatus">
-        <button class="btn btn-primary btn-sm" onclick="initGoogleDrive()" style="width:100%;justify-content:center;">
-          <span style="font-size:14px;">G</span> Sign in with Google
-        </button>
-      </div>
-    </div>
-
     <div class="card" style="padding:16px;">
       <div style="font-weight:500;margin-bottom:8px;">About CineTrack</div>
-      <div style="font-size:12px;color:var(--text3);line-height:1.6;">Version 2.0 — Your personal entertainment companion. Track movies, shows, dramas, anime, and more.</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.6;">Version 2.0 — Your personal entertainment companion. Track movies, shows, dramas, anime, and more. Data saved to your Google account.</div>
     </div>
   </div>
 
@@ -1558,6 +1582,165 @@ function celebrate(msg) {
 }
 
 // ════════════════════════════════════════
+// FIREBASE SETUP
+// ════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBvaVO6OYSisYIA5rlgtFwUKQQtXfkKfFI",
+  authDomain: "cinetrack-d7934.firebaseapp.com",
+  projectId: "cinetrack-d7934",
+  storageBucket: "cinetrack-d7934.firebasestorage.app",
+  messagingSenderId: "759056158385",
+  appId: "1:759056158385:web:ce948ee390f5a798719c90"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+
+let currentUser = null;
+let syncTimeout = null;
+let isSyncing = false;
+
+// Listen for auth state changes
+auth.onAuthStateChanged(async user => {
+  currentUser = user;
+  if(user) {
+    showSignedIn(user);
+    await loadFromFirestore();
+  } else {
+    showSignedOut();
+  }
+});
+
+// ════════════════════════════════════════
+// SIGN IN / OUT
+// ════════════════════════════════════════
+async function signInWithGoogle() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    // onAuthStateChanged handles the rest
+  } catch(err) {
+    if(err.code !== 'auth/popup-closed-by-user') {
+      alert('Sign-in failed: ' + err.message);
+    }
+  }
+}
+
+async function signOutGoogle() {
+  if(!confirm('Sign out? Your data is safely saved to your Google account.')) return;
+  await auth.signOut();
+  currentUser = null;
+  showSignedOut();
+  celebrate('👋 Signed out');
+}
+
+function showSignedIn(user) {
+  const out = document.getElementById('authSignedOut');
+  const inn = document.getElementById('authSignedIn');
+  if(out) out.style.display = 'none';
+  if(inn) inn.style.display = 'block';
+  const avatar = document.getElementById('userAvatar');
+  const name = document.getElementById('userName');
+  const email = document.getElementById('userEmail');
+  if(avatar && user.photoURL) avatar.src = user.photoURL;
+  if(name) name.textContent = user.displayName || 'User';
+  if(email) email.textContent = user.email;
+  updateSyncStatus('✅ All changes saved to your Google account');
+}
+
+function showSignedOut() {
+  const out = document.getElementById('authSignedOut');
+  const inn = document.getElementById('authSignedIn');
+  if(out) out.style.display = 'block';
+  if(inn) inn.style.display = 'none';
+}
+
+function updateSyncStatus(msg) {
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = msg;
+}
+
+// ════════════════════════════════════════
+// FIRESTORE SYNC
+// ════════════════════════════════════════
+async function saveToFirestore() {
+  if(!currentUser || isSyncing) return;
+  isSyncing = true;
+  try {
+    const docRef = firestore.collection('users').doc(currentUser.uid);
+    await docRef.set({
+      data: JSON.stringify(db),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const now = new Date().toLocaleTimeString();
+    updateSyncStatus('✅ Saved at ' + now);
+  } catch(err) {
+    updateSyncStatus('⚠️ Sync failed — data safe locally');
+    console.error('Firestore save error:', err);
+  } finally {
+    isSyncing = false;
+  }
+}
+
+async function loadFromFirestore() {
+  if(!currentUser) return;
+  try {
+    updateSyncStatus('⏳ Loading your data...');
+    const docRef = firestore.collection('users').doc(currentUser.uid);
+    const doc = await docRef.get();
+    if(doc.exists && doc.data().data) {
+      const cloudData = JSON.parse(doc.data().data);
+      // Merge: use cloud data but keep local if cloud is empty
+      if(cloudData.items && cloudData.items.length > 0) {
+        db = cloudData;
+        save(); // also save to localStorage as backup
+        renderPage(currentPage);
+        celebrate('☁️ Data loaded from your account!');
+      } else if(db.items && db.items.length > 0) {
+        // Local has data, push it to cloud
+        await saveToFirestore();
+      }
+      updateSyncStatus('✅ Synced with your Google account');
+    } else {
+      // No cloud data yet — push local data up
+      if(db.items && db.items.length > 0) {
+        await saveToFirestore();
+        updateSyncStatus('✅ Local data saved to your account');
+      } else {
+        updateSyncStatus('✅ Connected — start adding titles!');
+      }
+    }
+  } catch(err) {
+    updateSyncStatus('⚠️ Could not load cloud data — using local');
+    console.error('Firestore load error:', err);
+  }
+}
+
+async function manualSync() {
+  if(!currentUser) { navigate('settings'); return; }
+  updateSyncStatus('⏳ Syncing...');
+  await saveToFirestore();
+  celebrate('🔄 Synced!');
+}
+
+// Auto-sync: debounced 2 seconds after any change
+function scheduleSyncToCloud() {
+  if(!currentUser) return;
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(saveToFirestore, 2000);
+}
+
+// ════════════════════════════════════════
+// OVERRIDE SAVE TO ALSO SYNC TO CLOUD
+// ════════════════════════════════════════
+const _localSave = save;
+save = function() {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+  scheduleSyncToCloud();
+};
+
+// ════════════════════════════════════════
 // FILE-BASED SAVE
 // ════════════════════════════════════════
 function saveToFile() {
@@ -1572,11 +1755,10 @@ function saveToFile() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  // Update status
   db.lastFileSave = Date.now();
   save();
   const el = document.getElementById('fileSaveStatus');
-  if(el) el.textContent = '✅ Saved! File downloaded to your device.';
+  if(el) el.textContent = '✅ Saved to your device!';
   celebrate('💾 Save file downloaded!');
 }
 
@@ -1584,252 +1766,40 @@ function loadFromFile(e) {
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     try {
       const parsed = JSON.parse(ev.target.result);
-      if(!parsed.items) throw new Error('Invalid save file');
+      if(!parsed.items) throw new Error('Invalid');
       db = parsed;
       save();
       renderPage(currentPage);
       celebrate('✦ Save file loaded!');
       const el = document.getElementById('fileSaveStatus');
-      if(el) el.textContent = '✅ Data loaded from file successfully!';
-    } catch(err) {
-      alert('❌ Could not load file. Make sure it\'s a valid CineTrack save file (.cinetrack or .json).');
-    }
+      if(el) el.textContent = '✅ Loaded successfully!';
+    } catch { alert('❌ Invalid CineTrack save file.'); }
   };
   reader.readAsText(file);
 }
 
 // ════════════════════════════════════════
-// GOOGLE DRIVE SYNC
-// ════════════════════════════════════════
-const DRIVE_CLIENT_ID = ''; // User must add their own
-const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file';
-const DRIVE_FILENAME = 'cinetrack_data.json';
-let driveToken = null;
-let driveFileId = db.driveFileId || null;
-let gapiReady = false;
-
-function initGoogleDrive() {
-  // Check if user has set up client ID
-  if(!db.driveClientId) {
-    openModal('driveSetupModal');
-    return;
-  }
-  loadGoogleAPI();
-}
-
-function loadGoogleAPI() {
-  if(gapiReady) { signInGoogle(); return; }
-  const script = document.createElement('script');
-  script.src = 'https://accounts.google.com/gsi/client';
-  script.onload = () => { gapiReady = true; signInGoogle(); };
-  script.onerror = () => {
-    updateDriveStatus('error', '❌ Could not load Google API. Check your internet connection.');
-  };
-  document.head.appendChild(script);
-}
-
-function signInGoogle() {
-  if(!db.driveClientId) { openModal('driveSetupModal'); return; }
-  updateDriveStatus('loading', '⏳ Signing in...');
-  try {
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: db.driveClientId,
-      scope: DRIVE_SCOPES,
-      callback: (resp) => {
-        if(resp.error) { updateDriveStatus('error','❌ Sign-in failed: '+resp.error); return; }
-        driveToken = resp.access_token;
-        db.driveConnected = true;
-        save();
-        updateDriveStatus('connected', '✅ Connected to Google Drive');
-        renderDriveConnected();
-      }
-    });
-    client.requestAccessToken();
-  } catch(err) {
-    updateDriveStatus('error','❌ Error: '+err.message);
-  }
-}
-
-function renderDriveConnected() {
-  const el = document.getElementById('driveStatus');
-  if(!el) return;
-  el.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="font-size:12px;color:var(--green);font-weight:500;">✅ Connected to Google Drive</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-primary btn-sm" onclick="uploadToDrive()" style="flex:1;">☁️ Save to Drive</button>
-        <button class="btn btn-secondary btn-sm" onclick="downloadFromDrive()" style="flex:1;">📥 Load from Drive</button>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="signOutDrive()" style="flex:1;">Sign Out</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleAutoSync()" style="flex:1;" id="autoSyncBtn">
-          ${db.autoSync?'🔄 Auto-Sync: ON':'🔄 Auto-Sync: OFF'}
-        </button>
-      </div>
-      <div id="driveLastSync" style="font-size:11px;color:var(--text3);text-align:center;">
-        ${db.lastDriveSync ? 'Last synced: '+new Date(db.lastDriveSync).toLocaleString() : 'Not yet synced'}
-      </div>
-    </div>`;
-}
-
-function toggleAutoSync() {
-  db.autoSync = !db.autoSync;
-  save();
-  const btn = document.getElementById('autoSyncBtn');
-  if(btn) btn.textContent = db.autoSync?'🔄 Auto-Sync: ON':'🔄 Auto-Sync: OFF';
-}
-
-async function uploadToDrive() {
-  if(!driveToken) { signInGoogle(); return; }
-  updateDriveStatus('loading','⏳ Saving to Drive...');
-  try {
-    const content = JSON.stringify(db, null, 2);
-    const blob = new Blob([content], {type:'application/json'});
-
-    let url, method;
-    // Check if file exists
-    if(!driveFileId) {
-      // Search for existing file
-      const searchRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}' and trashed=false&spaces=drive`,
-        { headers: { Authorization: 'Bearer '+driveToken } }
-      );
-      const searchData = await searchRes.json();
-      if(searchData.files && searchData.files.length > 0) {
-        driveFileId = searchData.files[0].id;
-        db.driveFileId = driveFileId;
-      }
-    }
-
-    if(driveFileId) {
-      // Update existing file
-      url = `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`;
-      method = 'PATCH';
-    } else {
-      // Create new file with metadata
-      const meta = JSON.stringify({ name: DRIVE_FILENAME, mimeType: 'application/json' });
-      const form = new FormData();
-      form.append('metadata', new Blob([meta],{type:'application/json'}));
-      form.append('file', blob);
-      const createRes = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-        { method:'POST', headers:{Authorization:'Bearer '+driveToken}, body:form }
-      );
-      const createData = await createRes.json();
-      driveFileId = createData.id;
-      db.driveFileId = driveFileId;
-      db.lastDriveSync = Date.now();
-      save();
-      renderDriveConnected();
-      celebrate('☁️ Saved to Google Drive!');
-      return;
-    }
-
-    await fetch(url, {
-      method, headers:{Authorization:'Bearer '+driveToken,'Content-Type':'application/json'},
-      body: content
-    });
-    db.lastDriveSync = Date.now();
-    db.driveFileId = driveFileId;
-    save();
-    renderDriveConnected();
-    celebrate('☁️ Saved to Google Drive!');
-  } catch(err) {
-    updateDriveStatus('error','❌ Upload failed: '+err.message);
-    console.error(err);
-  }
-}
-
-async function downloadFromDrive() {
-  if(!driveToken) { signInGoogle(); return; }
-  updateDriveStatus('loading','⏳ Loading from Drive...');
-  try {
-    let fid = driveFileId;
-    if(!fid) {
-      const searchRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILENAME}' and trashed=false`,
-        { headers:{Authorization:'Bearer '+driveToken} }
-      );
-      const searchData = await searchRes.json();
-      if(!searchData.files || !searchData.files.length) {
-        updateDriveStatus('error','❌ No save file found on Drive. Save first!');
-        renderDriveConnected();
-        return;
-      }
-      fid = searchData.files[0].id;
-      driveFileId = fid;
-    }
-    const res = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
-      { headers:{Authorization:'Bearer '+driveToken} }
-    );
-    const data = await res.json();
-    if(!data.items) throw new Error('Invalid data');
-    db = data;
-    db.driveFileId = fid;
-    db.driveConnected = true;
-    db.driveClientId = db.driveClientId;
-    save();
-    renderPage(currentPage);
-    renderDriveConnected();
-    celebrate('📥 Loaded from Google Drive!');
-  } catch(err) {
-    updateDriveStatus('error','❌ Load failed: '+err.message);
-    console.error(err);
-  }
-}
-
-function signOutDrive() {
-  driveToken = null;
-  db.driveConnected = false;
-  save();
-  const el = document.getElementById('driveStatus');
-  if(el) el.innerHTML = `<button class="btn btn-primary btn-sm" onclick="initGoogleDrive()" style="width:100%;justify-content:center;"><span style="font-size:14px;">G</span> Sign in with Google</button>`;
-}
-
-function updateDriveStatus(type, msg) {
-  // Show status in the card
-  const el = document.getElementById('driveStatus');
-  if(!el) return;
-  if(type==='loading') {
-    el.innerHTML = `<div style="font-size:12px;color:var(--text3);text-align:center;padding:8px;">${msg}</div>`;
-  } else if(type==='error') {
-    el.innerHTML = `
-      <div style="font-size:12px;color:var(--coral);margin-bottom:8px;">${msg}</div>
-      <button class="btn btn-ghost btn-sm" onclick="initGoogleDrive()">Try Again</button>`;
-  }
-}
-
-// Auto-sync on data change
-const origSave = save;
-
-// Re-init drive state on load
-if(db.driveConnected && db.driveClientId) {
-  setTimeout(()=>{
-    const el = document.getElementById('driveStatus');
-    if(el) el.innerHTML = `
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Previously connected. Re-authenticate to sync.</div>
-      <button class="btn btn-primary btn-sm" onclick="initGoogleDrive()" style="width:100%;justify-content:center;"><span style="font-size:14px;">G</span> Reconnect to Drive</button>`;
-  }, 100);
-}
-
-// ════════════════════════════════════════
-// SETTINGS RENDER UPGRADE
+// SETTINGS RENDER
 // ════════════════════════════════════════
 const _origRenderSettings = renderSettings;
 renderSettings = function() {
   _origRenderSettings();
-  // Update file save status
+  // Restore auth UI state
+  if(currentUser) showSignedIn(currentUser);
+  else showSignedOut();
+  // File save status
   const el = document.getElementById('fileSaveStatus');
   if(el && db.lastFileSave) {
-    el.textContent = 'Last saved: '+new Date(db.lastFileSave).toLocaleString();
+    el.textContent = 'Last saved: ' + new Date(db.lastFileSave).toLocaleString();
   }
-  // Restore drive UI if connected
-  if(db.driveConnected && driveToken) renderDriveConnected();
 };
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
 applyTheme();
 toggleEpisodeField();
 renderHome();
